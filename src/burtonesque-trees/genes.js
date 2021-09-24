@@ -27,4 +27,4 @@ const validateGene = (gene, value) => {
 	return parseInt(Math.min(Math.max(value, geneStructure[gene].min), geneStructure[gene].max));
 };
 
-export default { validateGene, defaultGenome, randomGenome };
+export  { validateGene, defaultGenome, randomGenome };

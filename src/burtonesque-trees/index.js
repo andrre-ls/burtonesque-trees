@@ -1,148 +1,124 @@
 import LsSvg from './lsSvg.js';
-import GeneController from './genes.js';
+import * as GeneController from './genes.js';
 
 // p5js
 // https://p5js.org/
 const _p5 = new p5(() => {});
 
-// settings
-const SVG_RESOLUTION = [512, 512];
-const BASE_COORDS = [256, 512];
+class BurtonesqueTree {
+	constructor(_canvasSize, _baseCoords) {
+		// define starting parameters and seed
+		this.genome = GeneController.defaultGenome();
+		this.seed = parseInt(Math.random() * 100000);
 
-// globals
-let genome = null;
-let canvas = null;
-let seed = null;
+		// create canvas
+		this.canvasSize = _canvasSize ?? [512, 512];
+		this.baseCoords = _baseCoords ?? [256, 512];
+		this.treeCanvas = new LsSvg(this.canvasSize[0], this.canvasSize[1], 'tree');
+	}
 
-const init = () => {
-	// define starting parameters and seed
-	genome = GeneController.defaultGenome();
-	seed = parseInt(Math.random() * 100000);
+	// set new seed
+	newSeed(_seed) {
+		this.seed = _seed ?? parseInt(Math.random() * 100000);
+	}
 
-	// create canvas
-	canvas = new LsSvg(SVG_RESOLUTION[0], SVG_RESOLUTION[1], 'tree');
+	// randomize entire genome
+	randomizeGenome() {
+		this.genome = GeneController.randomGenome();
+	}
 
-	return canvas.node;
-};
+	// recursively build branch
+	buildBranch(trunk, branches, parentIndex, branchRange, direction, curvedAng, fromtrunk = false) {
+		if (branches.nodes[parentIndex] !== undefined && branches.nodes[parentIndex].d >= this.genome.max_branch_depth) return;
 
-// recursively build branch
-const buildBranch = (trunk, branches, parentIndex, branchRange, direction, curvedAng, fromtrunk = false) => {
-	if (branches.nodes[parentIndex] !== undefined && branches.nodes[parentIndex].d >= genome.max_branch_depth) return;
+		// Branch sprouted from the trunk, as opposed to from another branch
+		if (fromtrunk) {
+			branches.nodes.push({
+				x: trunk.nodes[parentIndex].x,
+				y: trunk.nodes[parentIndex].y,
+				d: 0,
+				oldest: 0,
+				creator: branches.nodes.length,
+			});
+			parentIndex = branches.nodes.length - 1;
+		}
 
-	// Branch sprouted from the trunk, as opposed to from another branch
-	if (fromtrunk) {
-		branches.nodes.push({
-			x: trunk.nodes[parentIndex].x,
-			y: trunk.nodes[parentIndex].y,
-			d: 0,
-			oldest: 0,
-			creator: branches.nodes.length,
+		// length and angle. Branches are placed with a radius and angle
+		const branchLength = branchRange - _p5.random() * this.genome.branch_short_factor * branchRange;
+		let branchAngle = _p5.random(Math.PI - this.genome.branch_angle_range, Math.PI + this.genome.branch_angle_range);
+
+		// set side of the tree (left or right)
+		const inverter = direction < this.genome.left_right_bias ? -1 : 1;
+		if (inverter < 0) branchAngle -= Math.PI;
+
+		// spiral operations
+		if (curvedAng !== false) {
+			const spiralBranchAngle = curvedAng + (inverter * this.genome.spiral_factor * Math.PI) / 2 + (inverter * Math.PI) / 48;
+			branchAngle = branchAngle * (1 - this.genome.spiral_amount) + spiralBranchAngle * this.genome.spiral_amount;
+		}
+
+		// create new branch node
+		const newBranchNode = {
+			x: branches.nodes[parentIndex].x + branchLength * Math.cos(branchAngle),
+			y: branches.nodes[parentIndex].y + branchLength * Math.sin(branchAngle),
+			d: branches.nodes[parentIndex].d + 1,
+			creator: branches.nodes[parentIndex].creator,
+			oldest: branches.nodes[parentIndex].d + 1,
+		};
+		const newBranchIndex = branches.nodes.length;
+
+		// cancel if branch is below the ground plane
+		if (newBranchNode.y > trunk.nodes[0].y) return;
+
+		// TODO: check if new node intersects with body
+
+		// add branch node
+		branches.nodes[newBranchNode.creator].oldest = newBranchNode.d;
+		branches.nodes.push(newBranchNode);
+		branches.edges.push({
+			parent: parentIndex,
+			child: newBranchIndex,
 		});
-		parentIndex = branches.nodes.length - 1;
+
+		// Fork branch
+		if (_p5.random() < this.genome.fork_prob) {
+			this.buildBranch(trunk, branches, newBranchIndex, branchLength, direction, branchAngle + (Math.PI / 2) * this.genome.spiral_factor);
+			this.buildBranch(trunk, branches, newBranchIndex, branchLength, 3, branchAngle - (Math.PI / 2) * this.genome.spiral_factor);
+		} else if (_p5.random() > this.genome.stop_branch_prob) {
+			// Continue on current branch
+			this.buildBranch(trunk, branches, newBranchIndex, branchLength, direction, branchAngle);
+		}
 	}
 
-	// length and angle. Branches are placed with a radius and angle
-	const branchLength = branchRange - _p5.random() * genome.branch_short_factor * branchRange;
-	let branchAngle = _p5.random(Math.PI - genome.branch_angle_range, Math.PI + genome.branch_angle_range);
+	// recursively build tree
+	buildTree(index, trunk, branches) {
+		if (trunk.nodes.length >= this.genome.trunk_size) return;
 
-	// set side of the tree (left or right)
-	const inverter = direction < genome.left_right_bias ? -1 : 1;
-	if (inverter < 0) branchAngle -= Math.PI;
+		const constraint = Math.min(1, _p5.map(index, 0, 3, 0, 1)); // What is this? I don't remember
+		const newNode = {
+			x: trunk.nodes[index].x + constraint * (_p5.random() * this.genome.trunk_range_x * 2 - this.genome.trunk_range_x),
+			y: trunk.nodes[index].y - _p5.random() * this.genome.trunk_range_y,
+			d: trunk.nodes[index].d + 1,
+		};
+		const newIndex = trunk.nodes.length;
 
-	// spiral operations
-	if (curvedAng !== false) {
-		const spiralBranchAngle = curvedAng + (inverter * genome.spiral_factor * Math.PI) / 2 + (inverter * Math.PI) / 48;
-		branchAngle = branchAngle * (1 - genome.spiral_amount) + spiralBranchAngle * genome.spiral_amount;
+		// add new node to trunk
+		trunk.nodes.push(newNode);
+		trunk.edges.push({ parent: newIndex, child: index });
+
+		// probability of sprouting branch. Based on current depth and trunk size
+		let calculatedBranchProbability = _p5.map(newNode.d, 0, this.genome.trunk_size, this.genome.branch_prob - this.genome.branch_prob * this.genome.depth_branch_bias, this.genome.branch_prob);
+
+		// triple the probability of sprouting branch when at the end of the tree
+		if (trunk.nodes.length === this.genome.trunk_size) calculatedBranchProbability *= 3;
+
+		if (_p5.random() < calculatedBranchProbability) this.buildBranch(trunk, branches, newIndex, this.genome.branch_range, _p5.random(), false, true);
+		this.buildTree(newIndex, trunk, branches);
 	}
 
-	// create new branch node
-	const newBranchNode = {
-		x: branches.nodes[parentIndex].x + branchLength * Math.cos(branchAngle),
-		y: branches.nodes[parentIndex].y + branchLength * Math.sin(branchAngle),
-		d: branches.nodes[parentIndex].d + 1,
-		creator: branches.nodes[parentIndex].creator,
-		oldest: branches.nodes[parentIndex].d + 1,
-	};
-	const newBranchIndex = branches.nodes.length;
-
-	// cancel if branch is below the ground plane
-	if (newBranchNode.y > trunk.nodes[0].y) return;
-
-	// TODO: check if new node intersects with body
-
-	// add branch node
-	branches.nodes[newBranchNode.creator].oldest = newBranchNode.d;
-	branches.nodes.push(newBranchNode);
-	branches.edges.push({
-		parent: parentIndex,
-		child: newBranchIndex,
-	});
-
-	// Fork branch
-	if (_p5.random() < genome.fork_prob) {
-		buildBranch(trunk, branches, newBranchIndex, branchLength, direction, branchAngle + (Math.PI / 2) * genome.spiral_factor);
-		buildBranch(trunk, branches, newBranchIndex, branchLength, 3, branchAngle - (Math.PI / 2) * genome.spiral_factor);
-	} else if (_p5.random() > genome.stop_branch_prob) {
-		// Continue on current branch
-		buildBranch(trunk, branches, newBranchIndex, branchLength, direction, branchAngle);
-	}
-};
-
-// recursively build tree
-const buildTree = (index, trunk, branches) => {
-	if (trunk.nodes.length >= genome.trunk_size) return;
-
-	const constraint = Math.min(1, _p5.map(index, 0, 3, 0, 1)); // What is this? I don't remember
-	const newNode = {
-		x: trunk.nodes[index].x + constraint * (_p5.random() * genome.trunk_range_x * 2 - genome.trunk_range_x),
-		y: trunk.nodes[index].y - _p5.random() * genome.trunk_range_y,
-		d: trunk.nodes[index].d + 1,
-	};
-	const newIndex = trunk.nodes.length;
-
-	// add new node to trunk
-	trunk.nodes.push(newNode);
-	trunk.edges.push({ parent: newIndex, child: index });
-
-	// probability of sprouting branch. Based on current depth and trunk size
-	let calculatedBranchProbability = _p5.map(newNode.d, 0, genome.trunk_size, genome.branch_prob - genome.branch_prob * genome.depth_branch_bias, genome.branch_prob);
-
-	// triple the probability of sprouting branch when at the end of the tree
-	if (trunk.nodes.length === genome.trunk_size) calculatedBranchProbability *= 3;
-
-	if (_p5.random() < calculatedBranchProbability) buildBranch(trunk, branches, newIndex, genome.branch_range, _p5.random(), false, true);
-	buildTree(newIndex, trunk, branches);
-};
-
-// renders trunk as rects and branches as ellipses
-const debugRenderer = (trunk, branches) => {
-	// trunk
-	const trunkLayer = canvas.layer('trunk');
-	for (let trunkNode of trunk.nodes) trunkLayer.rect(trunkNode.x - 10, trunkNode.y - 10, 20, 20, { fill: 'rgba(0, 0, 255, 0.5)', stroke: 'rgba(0, 0, 255, 1)' });
-	let trunkPathString = '';
-	for (let trunkEdge of trunk.edges) {
-		const [parent, child] = [trunk.nodes[trunkEdge.parent], trunk.nodes[trunkEdge.child]];
-		trunkPathString += `M${parent.x} ${parent.y} L${child.x} ${child.y}`;
-	}
-	trunkLayer.path(trunkPathString, { id: 'trunk-edges', stroke: 'rgba(0, 0, 255, 1)' });
-
-	// branches
-	const branchLayer = canvas.layer('branches');
-	for (let branchNode of branches.nodes) branchLayer.ellipse(branchNode.x, branchNode.y, 10, 10, { fill: 'rgba(255, 0, 0, 0.5)', stroke: 'rgba(255, 0, 0, 1)' });
-	let edgePathString = '';
-	for (let branchEdge of branches.edges) {
-		const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
-		edgePathString += `M${parent.x} ${parent.y} L${child.x} ${child.y} `;
-	}
-	branchLayer.path(edgePathString, { id: 'branch-edges', stroke: 'rgba(255, 0, 0, 1)' });
-
-	return canvas.node;
-};
-
-const renderTree = (trunk, branches) => {
 	// render trunk polygons
-	const rendertrunk = (layer, start, end, startThickness, endThickness) => {
-		const resolution = genome.trunk_roughness;
+	renderTrunk(layer, start, end, startThickness, endThickness) {
+		const resolution = this.genome.trunk_roughness;
 		const roughnessNoiseInc = _p5.random(0.0025, 0.06);
 		const roughnessStrength = (_p5.random(endThickness, startThickness) * 2) / 3;
 
@@ -173,10 +149,10 @@ const renderTree = (trunk, branches) => {
 
 		layer.path(svgString + 'z');
 		return seamPoints;
-	};
+	}
 
-	// stitch gaps between trunk polygons
-	const stitchtrunkSeams = (layer, points) => {
+	// stitch seams between trunk polygons
+	stitchtrunkSeams(layer, points) {
 		for (let i = 0; i < points.length - 4; i += 4) {
 			layer.path(`
 					M${points[i].x} ${points[i].y}
@@ -186,34 +162,14 @@ const renderTree = (trunk, branches) => {
 					z
 				`);
 		}
-	};
-
-	// call trunk render functions
-	let trunkSeams = [];
-	const trunkLayer = canvas.layer('trunk');
-	trunkLayer.attribute('fill', '#000');
-
-	for (let edge of trunk.edges) {
-		const [parent, child] = [trunk.nodes[edge.parent], trunk.nodes[edge.child]];
-
-		let kS = 1 - _p5.map(Math.pow(1 - (1 / (trunk.nodes.length - 1)) * trunk.nodes.indexOf(parent), genome.trunk_exponetial_growth), Math.pow(0, genome.trunk_exponetial_growth), Math.pow(1, genome.trunk_exponetial_growth), 0, 1);
-		let kE = 1 - _p5.map(Math.pow(1 - (1 / (trunk.nodes.length - 1)) * trunk.nodes.indexOf(child), genome.trunk_exponetial_growth), Math.pow(0, genome.trunk_exponetial_growth), Math.pow(1, genome.trunk_exponetial_growth), 0, 1);
-
-		const startT = genome.base_thickness + kS * (genome.top_thickness - genome.base_thickness);
-		const endT = Math.max(0, genome.base_thickness + kE * (genome.top_thickness - genome.base_thickness));
-
-		const seamPoints = rendertrunk(trunkLayer, parent, child, startT, endT);
-		trunkSeams.push.apply(trunkSeams, seamPoints);
 	}
 
-	stitchtrunkSeams(trunkLayer, trunkSeams);
-
 	// render branch polygons
-	const renderBranch = (layer, start, end, startThickness, endThickness, strength = 12, roughness = 0.05) => {
-		const resolution = genome.branch_roughness;
+	renderBranch(layer, start, end, startThickness, endThickness, strength = 12, roughness = 0.05) {
+		const resolution = this.genome.branch_roughness;
 
 		// also don't remember what this is
-		const nStrength = _p5.map(endThickness, genome.branch_start_thickness, genome.branch_end_thickness, strength, strength / 5);
+		const nStrength = _p5.map(endThickness, this.genome.branch_start_thickness, this.genome.branch_end_thickness, strength, strength / 5);
 
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
@@ -244,43 +200,58 @@ const renderTree = (trunk, branches) => {
 			layer.polygon(start.x, start.y, startThickness, 6, angle, Math.PI + angle);
 			layer.polygon(end.x, end.y, endThickness, 6, angle + Math.PI, Math.PI * 2 + angle);
 		}
-	};
-
-	// call branch render functions
-	const branchesLayer = canvas.layer('branches');
-	branchesLayer.attribute('fill', '#000');
-	for (let branchEdge of branches.edges) {
-		const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
-		const creator = branches.nodes[parent.creator];
-		const startT = Math.max(genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, genome.branch_start_thickness, genome.branch_end_thickness));
-		const endT = Math.max(genome.branch_end_thickness, _p5.map(child.d, 0, creator.oldest, genome.branch_start_thickness, genome.branch_end_thickness));
-		renderBranch(branchesLayer, parent, child, startT, endT);
 	}
-};
 
-// generate new burton tree
-const generate = () => {
-	const trunk = { nodes: [], edges: [] };
-	const branches = { nodes: [], edges: [] };
+	// render whole tree
+	renderTree(trunk, branches) {
+		// call trunk render functions
+		let trunkSeams = [];
+		const trunkLayer = this.treeCanvas.layer('trunk');
+		trunkLayer.attribute('fill', '#000');
 
-	trunk.nodes.push({ x: BASE_COORDS[0], y: BASE_COORDS[1], d: 0 });
+		for (let edge of trunk.edges) {
+			const [parent, child] = [trunk.nodes[edge.parent], trunk.nodes[edge.child]];
 
-	_p5.randomSeed(seed);
-	canvas.clear();
-	buildTree(0, trunk, branches);
+			let kS = 1 - _p5.map(Math.pow(1 - (1 / (trunk.nodes.length - 1)) * trunk.nodes.indexOf(parent), this.genome.trunk_exponetial_growth), Math.pow(0, this.genome.trunk_exponetial_growth), Math.pow(1, this.genome.trunk_exponetial_growth), 0, 1);
+			let kE = 1 - _p5.map(Math.pow(1 - (1 / (trunk.nodes.length - 1)) * trunk.nodes.indexOf(child), this.genome.trunk_exponetial_growth), Math.pow(0, this.genome.trunk_exponetial_growth), Math.pow(1, this.genome.trunk_exponetial_growth), 0, 1);
 
-	//debugRenderer(trunk, branches);
-	renderTree(trunk, branches);
-};
+			const startT = this.genome.base_thickness + kS * (this.genome.top_thickness - this.genome.base_thickness);
+			const endT = Math.max(0, this.genome.base_thickness + kE * (this.genome.top_thickness - this.genome.base_thickness));
 
-const newSeed = () => (seed = parseInt(Math.random() * 100000));
-const randomizeGenome = () => (genome = GeneController.randomGenome());
+			const seamPoints = this.renderTrunk(trunkLayer, parent, child, startT, endT);
+			trunkSeams.push.apply(trunkSeams, seamPoints);
+		}
 
-const changeGene = (gene, _value) => {
-	const value = GeneController.validateGene(gene, _value);
-	if (value === false) return;
-	genome[gene] = value;
-	generate();
-};
+		this.stitchtrunkSeams(trunkLayer, trunkSeams);
 
-export default { init, generate, randomizeGenome, newSeed, genome };
+		// call branch render functions
+		const branchesLayer = this.treeCanvas.layer('branches');
+		branchesLayer.attribute('fill', '#000');
+		for (let branchEdge of branches.edges) {
+			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
+			const creator = branches.nodes[parent.creator];
+			const startT = Math.max(this.genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness));
+			const endT = Math.max(this.genome.branch_end_thickness, _p5.map(child.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness));
+			this.renderBranch(branchesLayer, parent, child, startT, endT);
+		}
+	}
+
+	// generate new burton tree
+	generate() {
+		const trunk = { nodes: [], edges: [] };
+		const branches = { nodes: [], edges: [] };
+
+		trunk.nodes.push({ x: this.baseCoords[0], y: this.baseCoords[1], d: 0 });
+
+		_p5.randomSeed(this.seed);
+		this.treeCanvas.clear();
+		this.buildTree(0, trunk, branches);
+		this.renderTree(trunk, branches);
+	}
+
+	get canvas() {
+		return this.treeCanvas.node;
+	}
+}
+
+export default BurtonesqueTree;

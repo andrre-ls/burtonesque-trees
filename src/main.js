@@ -1,6 +1,6 @@
-import BurtonTrees from './burtonesque-trees/index.js';
+import BurtonTree from './burtonesque-trees/index.js';
 
-const element = BurtonTrees.init();
-BurtonTrees.generate();
-document.body.append(element);
+const tree = new BurtonTree();
 
+document.body.append(tree.canvas);
+tree.generate();
