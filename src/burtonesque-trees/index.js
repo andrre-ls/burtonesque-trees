@@ -1,14 +1,23 @@
+import p5 from 'p5';
 import LsSvg from './lsSvg.js';
-import * as GeneController from './genes.js';
+import genomeStructure from './genomeStructure.js';
+import { countDecimals } from './utils.js';
 
 // p5js
 // https://p5js.org/
 const _p5 = new p5(() => {});
 
+// remove anoying default p5 <canvas>
+(function () {
+	const p5Canvas = document.getElementById('defaultCanvas0');
+	if (p5Canvas) p5Canvas.remove();
+})();
+
 class BurtonesqueTree {
 	constructor(_canvasSize, _baseCoords) {
 		// define starting parameters and seed
-		this.genome = GeneController.defaultGenome();
+		this.genome = {};
+		this.defaultGenome();
 		this.seed = parseInt(Math.random() * 100000);
 
 		// create canvas
@@ -22,9 +31,17 @@ class BurtonesqueTree {
 		this.seed = _seed ?? parseInt(Math.random() * 100000);
 	}
 
+	// fill genome with default values
+	defaultGenome() {
+		for (const geneName of Object.keys(genomeStructure)) this.genome[geneName] = genomeStructure[geneName].default;
+	}
+
 	// randomize entire genome
 	randomizeGenome() {
-		this.genome = GeneController.randomGenome();
+		for (const geneName of Object.keys(genomeStructure)) {
+			this.genome[geneName] = genomeStructure[geneName].min + Math.random() * (genomeStructure[geneName].max - genomeStructure[geneName].min);
+			this.genome[geneName] = Number(this.genome[geneName].toFixed(countDecimals(genomeStructure[geneName].step)));
+		}
 	}
 
 	// recursively build branch
@@ -205,7 +222,7 @@ class BurtonesqueTree {
 	// render whole tree
 	renderTree(trunk, branches) {
 		// call trunk render functions
-		let trunkSeams = [];
+		let [trunkSeams, trunkThicknesses] = [[], []];
 		const trunkLayer = this.treeCanvas.layer('trunk');
 		trunkLayer.attribute('fill', '#000');
 
@@ -220,8 +237,10 @@ class BurtonesqueTree {
 
 			const seamPoints = this.renderTrunk(trunkLayer, parent, child, startT, endT);
 			trunkSeams.push.apply(trunkSeams, seamPoints);
-		}
-
+			trunkThicknesses[edge.parent] = startT;
+			trunkThicknesses[edge.child] = endT;
+ 		}
+		 
 		this.stitchtrunkSeams(trunkLayer, trunkSeams);
 
 		// call branch render functions
@@ -230,8 +249,11 @@ class BurtonesqueTree {
 		for (let branchEdge of branches.edges) {
 			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
 			const creator = branches.nodes[parent.creator];
-			const startT = Math.max(this.genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness));
-			const endT = Math.max(this.genome.branch_end_thickness, _p5.map(child.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness));
+
+			const trunkCreatorThickness = trunkThicknesses[parent.creator] ?? this.genome.top_thickness;
+			const startT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
+			const endT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(child.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
+
 			this.renderBranch(branchesLayer, parent, child, startT, endT);
 		}
 	}

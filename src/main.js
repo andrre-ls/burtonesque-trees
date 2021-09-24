@@ -1,6 +1,6 @@
-import BurtonTree from './burtonesque-trees/index.js';
+import './global.css';
+import App from './App.svelte';
 
-const tree = new BurtonTree();
+const app = new App({ target: document.body });
 
-document.body.append(tree.canvas);
-tree.generate();
+export default app;
