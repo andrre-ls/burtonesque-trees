@@ -1,63 +1,154 @@
-html, body {
-	position: relative;
-	width: 100%;
-	height: 100%;
+/* TODO: only import weight used */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+:root {
+	/* Color  */
+	--clr-main: rgba(0, 0, 0, 1);
+	--clr-background: rgba(255, 255, 255, 1);
+	--clr-light-grey: rgba(200, 200, 200, 1);
+	--op-secondary: 0.5;
+	--op-hover: 0.5;
+	--op-focus: 0.75;
+
+	/* Typography */
+	--base-font-size: 12px;
+
+	/* Layout */
+	--page-margin: 4rem;
+	--side-bar-width: 250px;
+
+	/* Graphic Elements */
+	--stroke-size: 2px;
+}
+
+* {
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: var(--base-font-size);
 }
 
 body {
-	color: #333;
+	padding: 0;
 	margin: 0;
-	padding: 8px;
-	box-sizing: border-box;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	background-color: var(--clr-background);
 }
 
-a {
-	color: rgb(0,100,200);
-	text-decoration: none;
+.no-select {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
-a:hover {
-	text-decoration: underline;
+/* Button */
+.def-bttn {
+	position: relative;
+	width: 100%;
+	max-width: 300px;
+	font-size: 1rem;
+	text-align: left;
+	font-weight: 700;
+	background-color: var(--clr-background);
+	border: var(--stroke-size) solid var(--clr-main);
+	border-radius: var(--stroke-size);
+	padding: 0.75rem 1.25rem;
+	cursor: pointer;
+	margin-top: 0.5rem;
 }
 
-a:visited {
-	color: rgb(0,80,160);
+/* TODO: button hover */
+
+/* TODO: button click */
+
+/* Slider */
+
+.def-slider {
+	-webkit-appearance: none;
+	margin-top: 1rem;
+	width: 100%;
 }
 
-label {
-	display: block;
-}
-
-input, button, select, textarea {
-	font-family: inherit;
-	font-size: inherit;
-	-webkit-padding: 0.4em 0;
-	padding: 0.4em;
-	margin: 0 0 0.5em 0;
-	box-sizing: border-box;
-	border: 1px solid #ccc;
-	border-radius: 2px;
-}
-
-input:disabled {
-	color: #ccc;
-}
-
-button {
-	color: #333;
-	background-color: #f4f4f4;
+.def-slider:focus {
 	outline: none;
 }
 
-button:disabled {
-	color: #999;
+/* slider thumb */
+.def-slider::-webkit-slider-thumb {
+	height: 0.9rem;
+	width: 0.9rem;
+	background-color: var(--clr-main);
+	border-radius: var(--stroke-size);
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: calc(-0.45rem + var(--stroke-size) / 2);
 }
 
-button:not(:disabled):active {
-	background-color: #ddd;
+.def-slider::-moz-range-thumb {
+	height: 0.9rem;
+	width: 0.9rem;
+	background-color: var(--clr-main);
+	border-radius: var(--stroke-size);
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: calc(-0.45rem + var(--stroke-size) / 2);
 }
 
-button:focus {
-	border-color: #666;
+.def-slider::-ms-thumb {
+	height: 0.9rem;
+	width: 0.9rem;
+	background-color: var(--clr-main);
+	border-radius: var(--stroke-size);
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: calc(-0.45rem + var(--stroke-size) / 2);
 }
+
+/* Track */
+.def-slider::-webkit-slider-runnable-track {
+	width: 100%;
+	height: var(--stroke-size);
+	cursor: pointer;
+	background-color: var(--clr-main);
+	background-clip: content-box;
+	box-sizing: content-box;
+	padding: 0.5rem 0;
+}
+
+.def-slider::-moz-range-track {
+	width: 100%;
+	height: var(--stroke-size);
+	cursor: pointer;
+	background-color: var(--clr-main);
+	background-clip: content-box;
+	box-sizing: content-box;
+	padding: 0.5rem 0;
+}
+
+.def-slider::-ms-track {
+	width: 100%;
+	height: var(--stroke-size);
+	cursor: pointer;
+	background-color: var(--clr-main);
+	background-clip: content-box;
+	box-sizing: content-box;
+	padding: 0.5rem 0;
+}
+
+/* TODO: Slider hover */
+/* TODO: Slider focus */
+
+/* Scrollbar */
+.def-scroll::-webkit-scrollbar {
+	width: 0.75rem;
+}
+
+.def-scroll::-webkit-scrollbar-track {
+	background-color: var(--clr-light-grey);
+	cursor: pointer;
+}
+
+.def-scroll::-webkit-scrollbar-thumb {
+	background-color: var(--clr-main);
+}
+
+/* TODO: Scrollbar hover */
+/* TODO: Scrollbar focus */

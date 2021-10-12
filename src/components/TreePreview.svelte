@@ -2,24 +2,28 @@
 	import { onMount } from 'svelte';
 	export let tree;
 	let treeContainer;
-
 	onMount(() => treeContainer.append(tree.canvas));
 </script>
 
-<div>
-	<div id="tree-container" bind:this={treeContainer} />
+<div id="tree-preview-container">
+	<div bind:this={treeContainer} />
 </div>
 
 <style>
-	#tree-container {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100vw;
-		height: 100vh;
+	#tree-preview-container {
+		border-bottom: var(--clr-main) solid var(--stroke-size);
+	}
+
+	#tree-preview-container > div {
 		display: flex;
 		justify-content: center;
-		align-items: center;
+		align-items: flex-end;
+		position: relative;
+		height: 100%;
+	}
+
+	:global(#tree-preview-container > div > svg) {
+		position: absolute;
 		pointer-events: none;
 	}
 </style>

@@ -9,20 +9,30 @@ const _p5 = new p5(() => {});
 
 // remove anoying default p5 <canvas>
 (function () {
-	const p5Canvas = document.getElementById('defaultCanvas0');
-	if (p5Canvas) p5Canvas.remove();
+	window.addEventListener('load', () => {
+		const p5Canvas = document.getElementById('defaultCanvas0');
+		if (p5Canvas) p5Canvas.remove();
+	});
 })();
+
+const radsToDegs = (rad) => (rad * 180) / Math.PI;
+
+// SETTINGS -- might move this to its own file
+const FILL_STRING = 'rgba(0, 0, 0, 1)';
+const BASE_ANGLE = -Math.PI / 4;
+const ANGLE_RANGE = Math.PI / 3;
+const SPIRAL_FACTOR = Math.PI / 24;
 
 class BurtonesqueTree {
 	constructor(_canvasSize, _baseCoords) {
 		// define starting parameters and seed
 		this.genome = {};
-		this.defaultGenome();
+		this.resetGenome();
 		this.seed = parseInt(Math.random() * 100000);
 
 		// create canvas
 		this.canvasSize = _canvasSize ?? [512, 512];
-		this.baseCoords = _baseCoords ?? [256, 512];
+		this.baseCoords = _baseCoords ?? [this.canvasSize[0] / 2, this.canvasSize[1]];
 		this.treeCanvas = new LsSvg(this.canvasSize[0], this.canvasSize[1], 'tree');
 	}
 
@@ -32,7 +42,7 @@ class BurtonesqueTree {
 	}
 
 	// fill genome with default values
-	defaultGenome() {
+	resetGenome() {
 		for (const geneName of Object.keys(genomeStructure)) this.genome[geneName] = genomeStructure[geneName].default;
 	}
 
@@ -42,14 +52,21 @@ class BurtonesqueTree {
 			this.genome[geneName] = genomeStructure[geneName].min + Math.random() * (genomeStructure[geneName].max - genomeStructure[geneName].min);
 			this.genome[geneName] = Number(this.genome[geneName].toFixed(countDecimals(genomeStructure[geneName].step)));
 		}
+
+		// prevent end thicknessess from being greater than start thicknesses -- avoids weird-looking trees
+		if (this.genome['base_thickness'] < this.genome['top_thickness']) [this.genome['base_thickness'], this.genome['top_thickness']] = [this.genome['top_thickness'], this.genome['base_thickness']];
+		if (this.genome['branch_start_thickness'] < this.genome['branch_end_thickness']) [this.genome['branch_start_thickness'], this.genome['branch_end_thickness']] = [this.genome['branch_end_thickness'], this.genome['branch_start_thickness']];
 	}
 
 	// recursively build branch
-	buildBranch(trunk, branches, parentIndex, branchRange, direction, curvedAng, fromtrunk = false) {
+	buildBranch(trunk, branches, parentIndex, _trunkSide = null, lastAngle = null) {
 		if (branches.nodes[parentIndex] !== undefined && branches.nodes[parentIndex].d >= this.genome.max_branch_depth) return;
 
-		// Branch sprouted from the trunk, as opposed to from another branch
-		if (fromtrunk) {
+		// side of tree the branch is on (left: < 0.5, right: > 0.5);
+		const trunkSide = _trunkSide ?? _p5.random();
+
+		// branch sprouted from trunk and first node needs to be created
+		if (lastAngle === null) {
 			branches.nodes.push({
 				x: trunk.nodes[parentIndex].x,
 				y: trunk.nodes[parentIndex].y,
@@ -60,18 +77,20 @@ class BurtonesqueTree {
 			parentIndex = branches.nodes.length - 1;
 		}
 
-		// length and angle. Branches are placed with a radius and angle
-		const branchLength = branchRange - _p5.random() * this.genome.branch_short_factor * branchRange;
-		let branchAngle = _p5.random(Math.PI - this.genome.branch_angle_range, Math.PI + this.genome.branch_angle_range);
+		const branchLength = this.genome.branch_range - _p5.random() * this.genome.branch_short_factor * this.genome.branch_range;
 
-		// set side of the tree (left or right)
-		const inverter = direction < this.genome.left_right_bias ? -1 : 1;
-		if (inverter < 0) branchAngle -= Math.PI;
-
-		// spiral operations
-		if (curvedAng !== false) {
-			const spiralBranchAngle = curvedAng + (inverter * this.genome.spiral_factor * Math.PI) / 2 + (inverter * Math.PI) / 48;
-			branchAngle = branchAngle * (1 - this.genome.spiral_amount) + spiralBranchAngle * this.genome.spiral_amount;
+		// branch Angle
+		let branchAngle = 0;
+		const randomAngle = BASE_ANGLE + _p5.random(-this.genome.branch_angle_range, this.genome.branch_angle_range) * ANGLE_RANGE;
+		
+		// random branches or spiral branches
+		if (this.genome.spiral_amount === 0 || lastAngle === null) {
+			branchAngle = randomAngle;
+			// place on left side
+			if (trunkSide > this.genome.left_right_bias) branchAngle = Math.PI - branchAngle;
+		} else {
+			const inverter = trunkSide > this.genome.left_right_bias ? -1 : 1;
+			branchAngle = lastAngle + inverter * _p5.random() * (Math.PI - SPIRAL_FACTOR) * this.genome.spiral_amount + inverter * SPIRAL_FACTOR;
 		}
 
 		// create new branch node
@@ -85,9 +104,7 @@ class BurtonesqueTree {
 		const newBranchIndex = branches.nodes.length;
 
 		// cancel if branch is below the ground plane
-		if (newBranchNode.y > trunk.nodes[0].y) return;
-
-		// TODO: check if new node intersects with body
+		if (newBranchNode.y + 10 > trunk.nodes[0].y) return;
 
 		// add branch node
 		branches.nodes[newBranchNode.creator].oldest = newBranchNode.d;
@@ -97,13 +114,24 @@ class BurtonesqueTree {
 			child: newBranchIndex,
 		});
 
-		// Fork branch
+		// cut branch short
+		if (_p5.random() < this.genome.stop_branch_prob) return;
+
+		// fork branch
 		if (_p5.random() < this.genome.fork_prob) {
-			this.buildBranch(trunk, branches, newBranchIndex, branchLength, direction, branchAngle + (Math.PI / 2) * this.genome.spiral_factor);
-			this.buildBranch(trunk, branches, newBranchIndex, branchLength, 3, branchAngle - (Math.PI / 2) * this.genome.spiral_factor);
-		} else if (_p5.random() > this.genome.stop_branch_prob) {
-			// Continue on current branch
-			this.buildBranch(trunk, branches, newBranchIndex, branchLength, direction, branchAngle);
+			// up
+			const upAngleOffset = _p5.random(this.genome.branch_angle_range) * (Math.PI / 7);
+			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle + upAngleOffset);
+
+			// down
+			const downAngleOffset = -_p5.random(this.genome.branch_angle_range) * (Math.PI / 7);
+			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle + downAngleOffset);
+
+			// OH DAMNNN, triple fork!!!!
+			if (_p5.random() < this.genome.fork_porb / 10) this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle);
+		} else {
+			// no fork
+			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle);
 		}
 	}
 
@@ -111,10 +139,12 @@ class BurtonesqueTree {
 	buildTree(index, trunk, branches) {
 		if (trunk.nodes.length >= this.genome.trunk_size) return;
 
-		const constraint = Math.min(1, _p5.map(index, 0, 3, 0, 1)); // What is this? I don't remember
+		// force trunk to be straighter (aka point upwards) at the base
+		const straightnessConstraint = Math.min(1, _p5.map(index, 0, this.genome.inc_straightness, 0, 1));
+
 		const newNode = {
-			x: trunk.nodes[index].x + constraint * (_p5.random() * this.genome.trunk_range_x * 2 - this.genome.trunk_range_x),
-			y: trunk.nodes[index].y - _p5.random() * this.genome.trunk_range_y,
+			x: trunk.nodes[index].x + straightnessConstraint * _p5.random(-this.genome.trunk_range_x, this.genome.trunk_range_x),
+			y: trunk.nodes[index].y - _p5.random() * this.genome.trunk_range_y - 3,
 			d: trunk.nodes[index].d + 1,
 		};
 		const newIndex = trunk.nodes.length;
@@ -129,7 +159,7 @@ class BurtonesqueTree {
 		// triple the probability of sprouting branch when at the end of the tree
 		if (trunk.nodes.length === this.genome.trunk_size) calculatedBranchProbability *= 3;
 
-		if (_p5.random() < calculatedBranchProbability) this.buildBranch(trunk, branches, newIndex, this.genome.branch_range, _p5.random(), false, true);
+		if (index > 1 && _p5.random() < calculatedBranchProbability) this.buildBranch(trunk, branches, newIndex);
 		this.buildTree(newIndex, trunk, branches);
 	}
 
@@ -224,7 +254,7 @@ class BurtonesqueTree {
 		// call trunk render functions
 		let [trunkSeams, trunkThicknesses] = [[], []];
 		const trunkLayer = this.treeCanvas.layer('trunk');
-		trunkLayer.attribute('fill', '#000');
+		trunkLayer.attribute('fill', FILL_STRING);
 
 		for (let edge of trunk.edges) {
 			const [parent, child] = [trunk.nodes[edge.parent], trunk.nodes[edge.child]];
@@ -239,13 +269,13 @@ class BurtonesqueTree {
 			trunkSeams.push.apply(trunkSeams, seamPoints);
 			trunkThicknesses[edge.parent] = startT;
 			trunkThicknesses[edge.child] = endT;
- 		}
-		 
+		}
+
 		this.stitchtrunkSeams(trunkLayer, trunkSeams);
 
 		// call branch render functions
 		const branchesLayer = this.treeCanvas.layer('branches');
-		branchesLayer.attribute('fill', '#000');
+		branchesLayer.attribute('fill', FILL_STRING);
 		for (let branchEdge of branches.edges) {
 			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
 			const creator = branches.nodes[parent.creator];
