@@ -3,7 +3,7 @@ export default {
 	trunk_size: {
 		default: 10,
 		max: 20,
-		min: 2,
+		min: 3,
 		step: 1,
 	},
 	// how far horizontally each new trunk section can move

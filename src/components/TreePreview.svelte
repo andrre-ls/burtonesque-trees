@@ -12,6 +12,7 @@
 <style>
 	#tree-preview-container {
 		border-bottom: var(--clr-main) solid var(--stroke-size);
+		pointer-events: none;
 	}
 
 	#tree-preview-container > div {
@@ -24,6 +25,5 @@
 
 	:global(#tree-preview-container > div > svg) {
 		position: absolute;
-		pointer-events: none;
 	}
 </style>

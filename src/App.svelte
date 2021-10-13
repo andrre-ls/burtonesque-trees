@@ -2,9 +2,23 @@
 	import TreeControls from './components/TreeControls.svelte';
 	import TreePreview from './components/TreePreview.svelte';
 	import BurtonTree from './burtonesque-trees';
+	import { updateColourMode } from './ui-utils/colourMode.js';
+
+	let isLightMode = true;
 
 	const tree = new BurtonTree([1024, 1024]);
 	tree.generate();
+
+	// switch between light and dark mode
+	const handleSwitchColourMode = () => {
+		isLightMode = !isLightMode;
+		const modeStr = isLightMode ? 'LIGHT' : 'DARK';
+		updateColourMode(modeStr);
+		
+		// invert tree. I did it this way to keep the export colour consistent — a black silhouette
+		tree.canvas.style.filter = isLightMode ? null : 'invert()';
+	};
+
 </script>
 
 <main>
@@ -12,7 +26,7 @@
 		<ul class="no-select">
 			<li id="header-title">Burton<i>esque</i> Trees</li>
 			<li class="header-bttn">About</li>
-			<li class="header-bttn">Dark Mode</li>
+			<li class="header-bttn" on:click={handleSwitchColourMode}>{isLightMode ? 'Dark Mode' : 'Light Mode'}</li>
 		</ul>
 	</header>
 
@@ -72,7 +86,7 @@
 	}
 
 	.header-bttn:hover {
-		opacity: var(--op-hover);
+		color: var(--clr-hover);
 	}
 
 	#main-container {

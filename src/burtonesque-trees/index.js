@@ -15,13 +15,12 @@ const _p5 = new p5(() => {});
 	});
 })();
 
-const radsToDegs = (rad) => (rad * 180) / Math.PI;
-
 // SETTINGS -- might move this to its own file
 const FILL_STRING = 'rgba(0, 0, 0, 1)';
 const BASE_ANGLE = -Math.PI / 4;
 const ANGLE_RANGE = Math.PI / 3;
 const SPIRAL_FACTOR = Math.PI / 24;
+const DOWNLOAD_PNG_HEIGHT = 2048;
 
 class BurtonesqueTree {
 	constructor(_canvasSize, _baseCoords) {
@@ -82,7 +81,7 @@ class BurtonesqueTree {
 		// branch Angle
 		let branchAngle = 0;
 		const randomAngle = BASE_ANGLE + _p5.random(-this.genome.branch_angle_range, this.genome.branch_angle_range) * ANGLE_RANGE;
-		
+
 		// random branches or spiral branches
 		if (this.genome.spiral_amount === 0 || lastAngle === null) {
 			branchAngle = randomAngle;
@@ -299,6 +298,52 @@ class BurtonesqueTree {
 		this.treeCanvas.clear();
 		this.buildTree(0, trunk, branches);
 		this.renderTree(trunk, branches);
+	}
+
+	// change single gene
+	updateGene(gene, value) {
+		if (!(gene in this.genome)) return;
+		this.genome[gene] = value;
+	}
+
+	// https://stackoverflow.com/questions/23218174/how-do-i-save-export-an-svg-file-after-creating-an-svg-with-d3-js-ie-safari-an
+	exportSvg() {
+		const svgData = this.treeCanvas.node.outerHTML;
+		const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+		const svgUrl = URL.createObjectURL(svgBlob);
+		const downloadLink = document.createElement('a');
+		downloadLink.href = svgUrl;
+		downloadLink.download = 'burtonesque-tree.svg';
+		downloadLink.click();
+	}
+	
+	// copied this from an old project
+	exportPng() {
+		return new Promise((resolve, reject) => {
+			let clonedSvg = this.treeCanvas.node.cloneNode(true);
+			// set pixels dimensions
+			const [svgWidth, svgHeight] = [clonedSvg.getAttribute('width'), clonedSvg.getAttribute('height')];
+			clonedSvg.setAttribute('width', (svgWidth * DOWNLOAD_PNG_HEIGHT) / svgHeight);
+			clonedSvg.setAttribute('height', DOWNLOAD_PNG_HEIGHT);
+
+			// convert svg to image
+			const convertedImg = document.createElement('img');
+			convertedImg.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(clonedSvg)));
+			convertedImg.onload = () => {
+				// convert image to canvas
+				const canvas = document.createElement('canvas');
+				canvas.width = svgWidth;
+				canvas.height = svgHeight;
+				canvas.getContext('2d').drawImage(convertedImg, 0, 0);
+
+				// download canvas
+				const downloadLink = document.createElement('a');
+				downloadLink.download = 'burtonesque-tree.png';
+				downloadLink.href = canvas.toDataURL();
+				downloadLink.click();
+				resolve();
+			};
+		});
 	}
 
 	get canvas() {
