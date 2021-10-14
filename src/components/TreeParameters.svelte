@@ -68,6 +68,7 @@
 		overflow-y: scroll;
 		border: var(--stroke-size) solid var(--clr-main);
 		border-radius: var(--stroke-size);
+		margin-top: 0.5rem;
 	}
 
 	#all-params-cont {
@@ -79,7 +80,7 @@
 	.param-cont {
 		margin-top: 2.25rem;
 		position: relative;
-		width: calc(100% - 1.5rem);
+		width: calc(100% - 1rem);
 	}
 
 	.param-cont:first-child {
@@ -91,6 +92,7 @@
 		font-weight: 700;
 		margin: 0;
 		color: var(--clr-main);
+		white-space: nowrap;
 	}
 
 	h4 > span {

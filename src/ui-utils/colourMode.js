@@ -18,6 +18,13 @@ const darkValues = {
 	'--lum-background': 10,
 };
 
+// TODO: 
+// easy way to animate the transition:
+// overlay ellipse with invert filter
+// expand ellipse until it covers the whole window
+// then invert the colours
+
+
 export const updateColourMode = (mode) => {
     const values = mode.toLowerCase() === 'light' ? lightValues : darkValues;
     const rootVars = Object.keys(values);

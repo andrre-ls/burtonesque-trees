@@ -31,7 +31,16 @@
 	const handleRandomizeParamters = () => {};
 
 	const handleDownloadSvg = () => tree.exportSvg();
-	const handleDownloadPng = () => tree.exportPng();
+
+	let downloadingPng = false;
+	const handleDownloadPng = async () => {
+		downloadingPng = true;
+		// returns a promise
+		await tree.exportPng();
+		downloadingPng = false;
+
+		// I'm doing this to avoid multiple clicks before the promise is resolved.
+	};
 </script>
 
 <div bind:this={controlsContainer} id="controls-container">
@@ -52,7 +61,7 @@
 		<section>
 			<h3>Export</h3>
 			<button class="def-bttn" on:click={handleDownloadSvg}>Download SVG</button>
-			<button class="def-bttn" on:click={handleDownloadPng}>Download PNG</button>
+			<button class="def-bttn" on:click={handleDownloadPng} disabled={downloadingPng}>Download PNG</button>
 		</section>
 	</div>
 </div>
@@ -89,8 +98,8 @@
 
 	.title-plus-button {
 		display: flex;
-		align-items: baseline;
 		justify-content: space-between;
+				align-items: baseline;
 	}
 
 	.title-plus-button > span {

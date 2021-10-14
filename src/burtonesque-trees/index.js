@@ -58,7 +58,7 @@ class BurtonesqueTree {
 	}
 
 	// recursively build branch
-	buildBranch(trunk, branches, parentIndex, _trunkSide = null, lastAngle = null) {
+	buildBranch(trunk, branches, parentIndex, _trunkSide = null, lastAngle = null, lastLength = null) {
 		if (branches.nodes[parentIndex] !== undefined && branches.nodes[parentIndex].d >= this.genome.max_branch_depth) return;
 
 		// side of tree the branch is on (left: < 0.5, right: > 0.5);
@@ -72,11 +72,13 @@ class BurtonesqueTree {
 				d: 0,
 				oldest: 0,
 				creator: branches.nodes.length,
+				trunk_creator: parentIndex,
 			});
 			parentIndex = branches.nodes.length - 1;
 		}
 
-		const branchLength = this.genome.branch_range - _p5.random() * this.genome.branch_short_factor * this.genome.branch_range;
+		lastLength = lastLength ?? this.genome.branch_range;
+		const branchLength = _p5.random() * this.genome.branch_short_factor * lastLength + lastLength * (1 - this.genome.branch_short_factor);
 
 		// branch Angle
 		let branchAngle = 0;
@@ -99,6 +101,7 @@ class BurtonesqueTree {
 			d: branches.nodes[parentIndex].d + 1,
 			creator: branches.nodes[parentIndex].creator,
 			oldest: branches.nodes[parentIndex].d + 1,
+			trunk_creator: branches.nodes[parentIndex].trunk_creator,
 		};
 		const newBranchIndex = branches.nodes.length;
 
@@ -120,17 +123,17 @@ class BurtonesqueTree {
 		if (_p5.random() < this.genome.fork_prob) {
 			// up
 			const upAngleOffset = _p5.random(this.genome.branch_angle_range) * (Math.PI / 7);
-			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle + upAngleOffset);
+			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle + upAngleOffset, branchLength);
 
 			// down
 			const downAngleOffset = -_p5.random(this.genome.branch_angle_range) * (Math.PI / 7);
-			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle + downAngleOffset);
+			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle + downAngleOffset, branchLength);
 
 			// OH DAMNNN, triple fork!!!!
-			if (_p5.random() < this.genome.fork_porb / 10) this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle);
+			if (_p5.random() < this.genome.fork_porb / 10) this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle, branchLength);
 		} else {
 			// no fork
-			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle);
+			this.buildBranch(trunk, branches, newBranchIndex, trunkSide, branchAngle, branchLength);
 		}
 	}
 
@@ -165,7 +168,7 @@ class BurtonesqueTree {
 	// render trunk polygons
 	renderTrunk(layer, start, end, startThickness, endThickness) {
 		const resolution = this.genome.trunk_roughness;
-		const roughnessNoiseInc = _p5.random(0.0025, 0.06);
+		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
 		const roughnessStrength = (_p5.random(endThickness, startThickness) * 2) / 3;
 
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
@@ -211,11 +214,13 @@ class BurtonesqueTree {
 	}
 
 	// render branch polygons
-	renderBranch(layer, start, end, startThickness, endThickness, strength = 12, roughness = 0.05) {
+	renderBranch(layer, start, end, startThickness, endThickness) {
 		const resolution = this.genome.branch_roughness;
+		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
+		const roughnessStrength = _p5.random(endThickness, startThickness);
 
 		// also don't remember what this is
-		const nStrength = _p5.map(endThickness, this.genome.branch_start_thickness, this.genome.branch_end_thickness, strength, strength / 5);
+		// const nStrength = _p5.map(endThickness, this.genome.branch_start_thickness, this.genome.branch_end_thickness, strength, strength / 5);
 
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
@@ -229,7 +234,7 @@ class BurtonesqueTree {
 			}
 			//(a, b) = (x1 + k * (x2 - x1), y1 + k * (y2 - y1))
 			const point = { x: start.x + k * (end.x - start.x), y: start.y + k * (end.y - start.y) };
-			let offset = (_p5.noise(point.x * roughness, point.y * roughness) - 0.5) * 2 * nStrength * _p5.map(-(Math.pow(k, 2) - k), 0, 0.25, 0, 1);
+			let offset = (_p5.noise(point.x * roughnessNoiseInc, point.y * roughnessNoiseInc) - 0.5) * 2 * roughnessStrength * _p5.map(-(Math.pow(k, 2) - k), 0, 0.25, 0, 1);
 			if (offset > endThickness / 2 || offset < -endThickness / 2) offset = 0;
 			let thickness = startThickness + k * (endThickness - startThickness) + offset;
 
@@ -279,7 +284,7 @@ class BurtonesqueTree {
 			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
 			const creator = branches.nodes[parent.creator];
 
-			const trunkCreatorThickness = trunkThicknesses[parent.creator] ?? this.genome.top_thickness;
+			const trunkCreatorThickness = trunkThicknesses[parent.trunk_creator] ?? this.genome.top_thickness;
 			const startT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
 			const endT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(child.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
 
@@ -316,7 +321,7 @@ class BurtonesqueTree {
 		downloadLink.download = 'burtonesque-tree.svg';
 		downloadLink.click();
 	}
-	
+
 	// copied this from an old project
 	exportPng() {
 		return new Promise((resolve, reject) => {

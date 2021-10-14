@@ -1,6 +1,4 @@
-export const expand = (parent, parameters, buttons) => {
-	console.log('expand');
-    
+export const expand = (parent, parameters, buttons) => {    
     // change side bar width values
 	document.documentElement.style.setProperty('--side-bar-width', getComputedStyle(document.body).getPropertyValue('--side-bar-expanded-parameters'));
     buttons.style.width = 'var(--side-bar-expanded-buttons)';
@@ -13,8 +11,6 @@ export const expand = (parent, parameters, buttons) => {
 };
 
 export const collapse = (parent, parameters, buttons) => {
-	console.log('collpase');
-
 	// change side bar width values
 	document.documentElement.style.setProperty('--side-bar-width', getComputedStyle(document.body).getPropertyValue('--side-bar-collapsed'));
     
