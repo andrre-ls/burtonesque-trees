@@ -2,7 +2,7 @@
 	import TreeParameters from './TreeParameters.svelte';
 	import * as Layout from '../ui-utils/uiLayout.js';
 
-	export let tree;
+	export let tree, closeAbout;
 
 	let expandedLayout = false;
 	let controlsContainer;
@@ -12,12 +12,18 @@
 	const handleSwitchLayout = () => {
 		expandedLayout = !expandedLayout;
 
-		const layoutFunction = expandedLayout ? Layout.expand : Layout.collapse;
-		const [paramsContainer, buttonsContainer] = controlsContainer.children;
+		if(expandedLayout) closeAbout();
 
-		// TODO: refactor functions -- first param is not currently needed
-		layoutFunction(controlsContainer, paramsContainer, buttonsContainer);
+		const layoutFunction = expandedLayout ? Layout.expand : Layout.collapse;
+		const buttonsContainer = controlsContainer.children[1];
+
+		layoutFunction(buttonsContainer);
 	};
+
+	export const collapseLayout = () => {
+		expandedLayout = false;
+		Layout.collapse(controlsContainer.children[1]);
+	}
 
 	const handleNewSeed = () => {
 		tree.newSeed();
@@ -45,21 +51,21 @@
 
 <div bind:this={controlsContainer} id="controls-container">
 	<section>
-		<div class="title-plus-button">
-			<h3>Tree Parameters</h3>
+		<div class="section-title-button-cont">
+			<h3 class='section-title'>Tree Parameters</h3>
 			<span on:click={handleSwitchLayout} class="no-select">{expandedLayout ? 'collapse' : 'expand'}</span>
 		</div>
 		<TreeParameters bind:this={treeParametersComponent} {tree} />
 	</section>
 	<div>
 		<section>
-			<h3>Parameter Controls</h3>
+			<h3 class='section-title'>Parameter Controls</h3>
 			<button class="def-bttn" on:click={handleNewSeed}>New Seed</button>
 			<button class="def-bttn" on:click={handleResetParameters}>Reset Parameters</button>
 			<button class="def-bttn" on:click={handleRandomizeParamters}>Randomize Parameters</button>
 		</section>
 		<section>
-			<h3>Export</h3>
+			<h3 class='section-title'>Export</h3>
 			<button class="def-bttn" on:click={handleDownloadSvg}>Download SVG</button>
 			<button class="def-bttn" on:click={handleDownloadPng} disabled={downloadingPng}>Download PNG</button>
 		</section>
@@ -87,34 +93,4 @@
 		flex-direction: column;
 	}
 
-	h3 {
-		font-size: 1.2rem;
-		font-style: italic;
-		font-weight: 700;
-		margin: 0;
-		margin-bottom: 0.5rem;
-		color: var(--clr-main);
-	}
-
-	.title-plus-button {
-		display: flex;
-		justify-content: space-between;
-				align-items: baseline;
-	}
-
-	.title-plus-button > span {
-		font-size: 1rem;
-		font-weight: 500;
-		font-style: italic;
-		cursor: pointer;
-		color: var(--clr-secondary);
-		/* So the button is has a bigger bounding box and is therefore easier to click */
-		padding: 0.5rem 1rem;
-		transform: translateX(1rem);
-		text-align: right;
-	}
-
-	.title-plus-button > span:hover {
-		color: var(--clr-focus-bg);
-	}
 </style>

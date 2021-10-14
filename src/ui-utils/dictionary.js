@@ -15,7 +15,6 @@ export const genomeDictionary = {
 	fork_prob: 'Branch Fork Probability',
 	branch_range: 'Branch Length',
 	branch_short_factor: 'Branch Length Decrease',
-	branch_angle_range: 'Branch Angle Range',
 	spiral_amount: 'Branch Spiral Amount',
 	branch_start_thickness: 'Branch Start Thickness',
 	branch_end_thickness: 'Branch End Thickness',

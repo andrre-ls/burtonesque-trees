@@ -1,9 +1,8 @@
 import p5 from 'p5';
-import LsSvg from './lsSvg.js';
+import Asvg from '../Asvg';
 import genomeStructure from './genomeStructure.js';
-import { countDecimals } from './utils.js';
+import { downloadFile, countDecimals } from './utils.js';
 
-// p5js
 // https://p5js.org/
 const _p5 = new p5(() => {});
 
@@ -16,11 +15,11 @@ const _p5 = new p5(() => {});
 })();
 
 // SETTINGS -- might move this to its own file
-const FILL_STRING = 'rgba(0, 0, 0, 1)';
 const BASE_ANGLE = -Math.PI / 4;
-const ANGLE_RANGE = Math.PI / 3;
+const ANGLE_RANGE = [-Math.PI / 2, Math.PI / 3];
 const SPIRAL_FACTOR = Math.PI / 24;
 const DOWNLOAD_PNG_HEIGHT = 2048;
+const TREE_STYLE = { fill: 'rgba(0, 0, 0, 1)', stroke: 'rgba(0, 0, 0, 1)', 'stroke-width': '1px', 'stroke-linejoin': 'bevel' };
 
 class BurtonesqueTree {
 	constructor(_canvasSize, _baseCoords) {
@@ -32,7 +31,7 @@ class BurtonesqueTree {
 		// create canvas
 		this.canvasSize = _canvasSize ?? [512, 512];
 		this.baseCoords = _baseCoords ?? [this.canvasSize[0] / 2, this.canvasSize[1]];
-		this.treeCanvas = new LsSvg(this.canvasSize[0], this.canvasSize[1], 'tree');
+		this.treeCanvas = new Asvg(this.canvasSize[0], this.canvasSize[1], 'tree');
 	}
 
 	// set new seed
@@ -82,7 +81,8 @@ class BurtonesqueTree {
 
 		// branch Angle
 		let branchAngle = 0;
-		const randomAngle = BASE_ANGLE + _p5.random(-this.genome.branch_angle_range, this.genome.branch_angle_range) * ANGLE_RANGE;
+		// const randomAngle = BASE_ANGLE + _p5.random(-this.genome.branch_angle_range, this.genome.branch_angle_range) * ANGLE_RANGE;
+		const randomAngle = BASE_ANGLE + _p5.random(ANGLE_RANGE[0], ANGLE_RANGE[1]);
 
 		// random branches or spiral branches
 		if (this.genome.spiral_amount === 0 || lastAngle === null) {
@@ -158,10 +158,11 @@ class BurtonesqueTree {
 		// probability of sprouting branch. Based on current depth and trunk size
 		let calculatedBranchProbability = _p5.map(newNode.d, 0, this.genome.trunk_size, this.genome.branch_prob - this.genome.branch_prob * this.genome.depth_branch_bias, this.genome.branch_prob);
 
-		// triple the probability of sprouting branch when at the end of the tree
+		//	triple the probability of sprouting branch when at the end of the tree
 		if (trunk.nodes.length === this.genome.trunk_size) calculatedBranchProbability *= 3;
 
 		if (index > 1 && _p5.random() < calculatedBranchProbability) this.buildBranch(trunk, branches, newIndex);
+
 		this.buildTree(newIndex, trunk, branches);
 	}
 
@@ -173,11 +174,11 @@ class BurtonesqueTree {
 
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
-		let svgString = '';
-
 		// point to stitch seams between trunk polygons
 		const seamPoints = [];
 
+		// create new shape
+		layer.beginShape();
 		for (let i = 0; i <= 2 * resolution + 1; i++) {
 			let k = (1 / resolution) * i;
 			if (i > resolution) {
@@ -191,25 +192,27 @@ class BurtonesqueTree {
 			if (offset > endThickness / 2 || offset < -endThickness / 2) offset = 0;
 			let thickness = startThickness + k * (endThickness - startThickness) + offset;
 
-			svgString += `${i === 0 ? 'M' : 'L'}${point.x + (thickness / 2) * inverter * Math.cos(angle)} ${point.y + (thickness / 2) * inverter * Math.sin(angle)}`;
+			// add single point to created shape
+			layer.vertex(point.x + (thickness / 2) * inverter * Math.cos(angle), point.y + (thickness / 2) * inverter * Math.sin(angle));
 
 			if (k === 0 || k === 1) seamPoints.push({ x: point.x + (thickness / 2) * inverter * Math.cos(angle), y: point.y + (thickness / 2) * inverter * Math.sin(angle) });
 		}
+		// close shape
+		layer.endShape(true);
 
-		layer.path(svgString + 'z');
 		return seamPoints;
 	}
 
 	// stitch seams between trunk polygons
 	stitchtrunkSeams(layer, points) {
 		for (let i = 0; i < points.length - 4; i += 4) {
-			layer.path(`
-					M${points[i].x} ${points[i].y}
-					L${points[i + 5].x} ${points[i + 5].y}
-					L${points[i + 3].x} ${points[i + 3].y}
-					L${points[i + 6].x} ${points[i + 6].y}
-					z
-				`);
+			layer.beginShape();
+			// this order is weird because of the equally weird order that points are pushed into this array
+			layer.vertex(points[i].x, points[i].y);
+			layer.vertex(points[i + 5].x, points[i + 5].y);
+			layer.vertex(points[i + 3].x, points[i + 3].y);
+			layer.vertex(points[i + 6].x, points[i + 6].y);
+			layer.endShape(true);
 		}
 	}
 
@@ -219,13 +222,11 @@ class BurtonesqueTree {
 		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
 		const roughnessStrength = _p5.random(endThickness, startThickness);
 
-		// also don't remember what this is
-		// const nStrength = _p5.map(endThickness, this.genome.branch_start_thickness, this.genome.branch_end_thickness, strength, strength / 5);
-
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
-		let svgString = '';
 
+		// create new shape
+		layer.beginShape();
 		for (let i = 0; i <= 2 * resolution + 1; i++) {
 			let k = (1 / resolution) * i;
 			if (i > resolution) {
@@ -238,10 +239,11 @@ class BurtonesqueTree {
 			if (offset > endThickness / 2 || offset < -endThickness / 2) offset = 0;
 			let thickness = startThickness + k * (endThickness - startThickness) + offset;
 
-			svgString += `${i === 0 ? 'M' : 'L'}${point.x + (thickness / 2) * inverter * Math.cos(angle)} ${point.y + (thickness / 2) * inverter * Math.sin(angle)}`;
+			// add single point to created shape
+			layer.vertex(point.x + (thickness / 2) * inverter * Math.cos(angle), point.y + (thickness / 2) * inverter * Math.sin(angle));
 		}
-
-		layer.path(svgString + 'z');
+		// close shape
+		layer.endShape(true);
 
 		// stitching polygon corners with hexagons
 		if (start.x > end.x) {
@@ -257,8 +259,8 @@ class BurtonesqueTree {
 	renderTree(trunk, branches) {
 		// call trunk render functions
 		let [trunkSeams, trunkThicknesses] = [[], []];
-		const trunkLayer = this.treeCanvas.layer('trunk');
-		trunkLayer.attribute('fill', FILL_STRING);
+		const trunkLayer = this.treeCanvas.createLayer('trunk');
+		trunkLayer.setAttributeMult(TREE_STYLE);
 
 		for (let edge of trunk.edges) {
 			const [parent, child] = [trunk.nodes[edge.parent], trunk.nodes[edge.child]];
@@ -278,15 +280,19 @@ class BurtonesqueTree {
 		this.stitchtrunkSeams(trunkLayer, trunkSeams);
 
 		// call branch render functions
-		const branchesLayer = this.treeCanvas.layer('branches');
-		branchesLayer.attribute('fill', FILL_STRING);
+		const branchesLayer = this.treeCanvas.createLayer('branches');
+		branchesLayer.setAttributeMult(TREE_STYLE);
+
 		for (let branchEdge of branches.edges) {
 			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
 			const creator = branches.nodes[parent.creator];
 
 			const trunkCreatorThickness = trunkThicknesses[parent.trunk_creator] ?? this.genome.top_thickness;
-			const startT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
+			let startT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(parent.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
 			const endT = Math.min(trunkCreatorThickness, Math.max(this.genome.branch_end_thickness, _p5.map(child.d, 0, creator.oldest, this.genome.branch_start_thickness, this.genome.branch_end_thickness)));
+
+			// make last branch start out with the same thickness as the top of the tree — again, to avoid weird-looking stuff
+			if (parent.trunk_creator + 1 === trunk.nodes.length && parent.d === 0) startT = this.genome.top_thickness;
 
 			this.renderBranch(branchesLayer, parent, child, startT, endT);
 		}
@@ -311,44 +317,25 @@ class BurtonesqueTree {
 		this.genome[gene] = value;
 	}
 
-	// https://stackoverflow.com/questions/23218174/how-do-i-save-export-an-svg-file-after-creating-an-svg-with-d3-js-ie-safari-an
+	// download tree as SVG
 	exportSvg() {
-		const svgData = this.treeCanvas.node.outerHTML;
-		const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-		const svgUrl = URL.createObjectURL(svgBlob);
-		const downloadLink = document.createElement('a');
-		downloadLink.href = svgUrl;
-		downloadLink.download = 'burtonesque-tree.svg';
-		downloadLink.click();
+		const svgUrl = URL.createObjectURL(this.treeCanvas.getSvg(true));
+		downloadFile(svgUrl, 'burtonesque-tree.svg');
 	}
 
-	// copied this from an old project
-	exportPng() {
-		return new Promise((resolve, reject) => {
-			let clonedSvg = this.treeCanvas.node.cloneNode(true);
-			// set pixels dimensions
-			const [svgWidth, svgHeight] = [clonedSvg.getAttribute('width'), clonedSvg.getAttribute('height')];
-			clonedSvg.setAttribute('width', (svgWidth * DOWNLOAD_PNG_HEIGHT) / svgHeight);
-			clonedSvg.setAttribute('height', DOWNLOAD_PNG_HEIGHT);
+	// download tree as PNG
+	async exportPng() {
+		// tree as png
+		const treeImage = await this.treeCanvas.getPng(DOWNLOAD_PNG_HEIGHT);
 
-			// convert svg to image
-			const convertedImg = document.createElement('img');
-			convertedImg.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(clonedSvg)));
-			convertedImg.onload = () => {
-				// convert image to canvas
-				const canvas = document.createElement('canvas');
-				canvas.width = svgWidth;
-				canvas.height = svgHeight;
-				canvas.getContext('2d').drawImage(convertedImg, 0, 0);
+		// convert image to canvas
+		const canvas = document.createElement('canvas');
+		canvas.width = treeImage.width;
+		canvas.height = treeImage.height;
+		canvas.getContext('2d').drawImage(treeImage, 0, 0);
+		const canvasUrl = canvas.toDataURL();
 
-				// download canvas
-				const downloadLink = document.createElement('a');
-				downloadLink.download = 'burtonesque-tree.png';
-				downloadLink.href = canvas.toDataURL();
-				downloadLink.click();
-				resolve();
-			};
-		});
+		downloadFile(canvasUrl, 'burtonesque-tree.png');
 	}
 
 	get canvas() {

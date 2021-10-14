@@ -51,11 +51,8 @@ export default {
 	// how much each new branch section will decrease by in length
 	branch_short_factor: { default: 0.3, max: 0.95, min: 0, step: 0.05 },
 	// *
-	// how much the angle can vary from PI (i.e. horizontal)
-	branch_angle_range: { default: 1, max: 1, min: 0, step: 0.0025 },
-	// *
 	// how much each branch will lean toward spiraling
-	spiral_amount: { default: 0.5, max: 1, min: 0, step: 0.05 },
+	spiral_amount: { default: 0, max: 1, min: 0, step: 0.05 },
 	// *
 	// branch thickness at body
 	branch_start_thickness: { default: 15, max: 30, min: 5, step: 1 },
