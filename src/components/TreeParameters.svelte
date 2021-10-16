@@ -4,6 +4,7 @@
 	import { genomeDictionary } from '../ui-utils/dictionary.js';
 
 	export let tree;
+	export let debugStyle = false;
 
 	let paramContainer;
 	onMount(() => {
@@ -29,7 +30,7 @@
 			parameterState[gene] = genomeStructure[gene].default;
 			tree.updateGene(gene, parameterState[gene]);
 		}
-		tree.generate();
+		tree.generate(debugStyle);
 	};
 
 	// update tree parameters on UI input
@@ -37,7 +38,7 @@
 		const gene = e.target.dataset.paramid;
 		if (!(gene in parameterState)) return;
 		tree.updateGene(gene, parameterState[gene]);
-		tree.generate();
+		tree.generate(debugStyle);
 	};
 
 	// map from range1 to range2 -- to convert all parameters to 0-100%

@@ -25,5 +25,6 @@
 
 	:global(#tree-preview-container > div > svg) {
 		position: absolute;
+		height: 100%;
 	}
 </style>

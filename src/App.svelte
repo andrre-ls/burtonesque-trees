@@ -24,10 +24,14 @@
 	// show and hide about card
 	const handleToggleAbout = () => {
 		showAbout = !showAbout;
-		if(showAbout) treeControlsComponent.collapseLayout();
+		tree.generate(showAbout);
+		if (showAbout) treeControlsComponent.collapseLayout();
 	};
-	
-	const closeAbout = () => showAbout = false;
+
+	const closeAbout = () => {
+		showAbout = false;
+		tree.generate(showAbout);
+	};
 </script>
 
 <main>
@@ -40,7 +44,7 @@
 	</header>
 
 	<div id="main-container">
-		<TreeControls bind:this={treeControlsComponent} {tree} {closeAbout} />
+		<TreeControls bind:this={treeControlsComponent} {tree} {closeAbout} debugStyle={showAbout}/>
 		<TreePreview {tree} />
 
 		{#if showAbout}

@@ -41,6 +41,7 @@ class Alayer {
 
 	// draw and append ellipse (from center)
 	ellipse(x, y, width, height, styleAttributes = {}) {
+		height = height || width;
 		const ellipseNode = document.createElementNS(SVG_URI, 'ellipse');
 
 		// position and size
@@ -57,12 +58,12 @@ class Alayer {
 		this.ellipse(x + width / 2, y + height / 2, width, height, styleAttributes);
 	}
 
-	// draw polygon
-	polygon(x, y, radius, npoints, startAng, endAng, styleAttributes = {}) {
-		const angle = (Math.PI * 2) / npoints;
+	// draw n-agon, where n = number of sides (basically an hexagon of variable sides)
+	nAgon(x, y, radius, nPoints = 6, rotation = 0, startAng = 0, endAng = Math.PI * 2, styleAttributes = {}) {
+		const angle = (Math.PI * 2) / nPoints;
 		this.beginShape(styleAttributes);
 		for (let a = startAng; a <= endAng; a += angle) {
-			this.vertex(x + (Math.cos(a) * radius) / 2, y + (Math.sin(a) * radius) / 2);
+			this.vertex(x + (Math.cos(a + rotation) * radius) / 2, y + (Math.sin(a + rotation) * radius) / 2);
 		}
 		this.endShape(true);
 	}
@@ -121,6 +122,7 @@ class Asvg {
 		this.canvas = document.createElementNS(SVG_URI, 'svg');
 		this.canvas.setAttribute('width', _width ?? 256);
 		this.canvas.setAttribute('height', _height ?? 256);
+		this.canvas.setAttribute('viewBox', `0 0 ${_width} ${_height}`);
 		if (_id) this.canvas.id = _id;
 
 		// layers
@@ -174,7 +176,7 @@ class Asvg {
 				clonedSvg.setAttribute('width', (svgWidth * newHeight) / svgHeight);
 				clonedSvg.setAttribute('height', newHeight);
 			}
-			
+
 			// convert svg to image
 			const convertedCanvas = document.createElement('img');
 			convertedCanvas.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(clonedSvg)));

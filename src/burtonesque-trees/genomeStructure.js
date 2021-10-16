@@ -46,7 +46,7 @@ export default {
 	fork_prob: { default: 0.1, max: 0.5, min: 0, step: 0.05 },
 	// *
 	// length of each branch node
-	branch_range: { default: 50, max: 75, min: 10, step: 5 },
+	branch_range: { default: 30, max: 75, min: 10, step: 1 },
 	// *
 	// how much each new branch section will decrease by in length
 	branch_short_factor: { default: 0.3, max: 0.95, min: 0, step: 0.05 },

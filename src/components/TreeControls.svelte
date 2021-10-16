@@ -3,6 +3,7 @@
 	import * as Layout from '../ui-utils/uiLayout.js';
 
 	export let tree, closeAbout;
+	export let debugStyle = false;
 
 	let expandedLayout = false;
 	let controlsContainer;
@@ -27,7 +28,7 @@
 
 	const handleNewSeed = () => {
 		tree.newSeed();
-		tree.generate();
+		tree.generate(debugStyle);
 	};
 
 	// reset parameters. Function is on the <TreeParameters> components
@@ -47,6 +48,9 @@
 
 		// I'm doing this to avoid multiple clicks before the promise is resolved.
 	};
+
+
+	window.getSeed = () => console.log(tree.seed);
 </script>
 
 <div bind:this={controlsContainer} id="controls-container">
@@ -55,7 +59,7 @@
 			<h3 class='section-title'>Tree Parameters</h3>
 			<span on:click={handleSwitchLayout} class="no-select">{expandedLayout ? 'collapse' : 'expand'}</span>
 		</div>
-		<TreeParameters bind:this={treeParametersComponent} {tree} />
+		<TreeParameters bind:this={treeParametersComponent} {tree} {debugStyle} />
 	</section>
 	<div>
 		<section>

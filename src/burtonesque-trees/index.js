@@ -19,7 +19,17 @@ const BASE_ANGLE = -Math.PI / 4;
 const ANGLE_RANGE = [-Math.PI / 2, Math.PI / 3];
 const SPIRAL_FACTOR = Math.PI / 24;
 const DOWNLOAD_PNG_HEIGHT = 2048;
-const TREE_STYLE = { fill: 'rgba(0, 0, 0, 1)', stroke: 'rgba(0, 0, 0, 1)', 'stroke-width': '1px', 'stroke-linejoin': 'bevel' };
+
+// SVG styles
+const stylesheet = { fill: 'rgba(0, 0, 0, 1)', stroke: 'rgba(0, 0, 0, 1)', 'stroke-width': '1px', 'stroke-linejoin': 'round' };
+const debugStylesheet = {
+	trunk: { fill: 'rgba(0, 0, 0, 0.25)', stroke: 'rgba(0, 0, 0, 0.5)', 'stroke-width': '1px' },
+	branch: { fill: 'rgba(0, 0, 0, 0.25)', stroke: 'rgba(0, 0, 0, 0.5)', 'stroke-width': '1px' },
+	trunk_gap: { fill: 'rgba(0, 0, 200, 0.25)', stroke: 'rgba(0, 0, 0, 0.5)', 'stroke-width': '1px' },
+	branch_gap: { fill: 'rgba(200, 0, 0, 0.25)', stroke: 'rgba(0, 0, 0, 0.5)', 'stroke-width': '1px' },
+	trunk_branch_gap: { fill: 'rgba(0, 200, 0, 0.25)', stroke: 'rgba(0, 0, 0, 0.5)', 'stroke-width': '1px' },
+};
+let activeStylesheet = stylesheet;
 
 class BurtonesqueTree {
 	constructor(_canvasSize, _baseCoords) {
@@ -153,7 +163,7 @@ class BurtonesqueTree {
 
 		// add new node to trunk
 		trunk.nodes.push(newNode);
-		trunk.edges.push({ parent: newIndex, child: index });
+		trunk.edges.push({ parent: index, child: newIndex });
 
 		// probability of sprouting branch. Based on current depth and trunk size
 		let calculatedBranchProbability = _p5.map(newNode.d, 0, this.genome.trunk_size, this.genome.branch_prob - this.genome.branch_prob * this.genome.depth_branch_bias, this.genome.branch_prob);
@@ -166,16 +176,24 @@ class BurtonesqueTree {
 		this.buildTree(newIndex, trunk, branches);
 	}
 
+	// render a polygon between two edges
+	renderEdgeGapPolygon(layer, end1Pos, angle1, thickness1, start2Pos, angle2, thickness2, styleAttributes = {}) {
+		layer.beginShape(styleAttributes);
+		layer.vertex(end1Pos.x - (thickness2 / 2) * Math.cos(angle1), end1Pos.y - (thickness1 / 2) * Math.sin(angle1));
+		layer.vertex(start2Pos.x - (thickness2 / 2) * Math.cos(angle2), start2Pos.y - (thickness2 / 2) * Math.sin(angle2));
+		layer.vertex(end1Pos.x + (thickness2 / 2) * Math.cos(angle1), end1Pos.y + (thickness1 / 2) * Math.sin(angle1));
+		layer.vertex(start2Pos.x + (thickness2 / 2) * Math.cos(angle2), start2Pos.y + (thickness2 / 2) * Math.sin(angle2));
+		layer.endShape();
+	}
+
 	// render trunk polygons
-	renderTrunk(layer, start, end, startThickness, endThickness) {
+	renderTrunk(layer, start, end, startThickness, endThickness, lastEnd) {
 		const resolution = this.genome.trunk_roughness;
 		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
 		const roughnessStrength = (_p5.random(endThickness, startThickness) * 2) / 3;
 
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
-		// point to stitch seams between trunk polygons
-		const seamPoints = [];
 
 		// create new shape
 		layer.beginShape();
@@ -194,35 +212,24 @@ class BurtonesqueTree {
 
 			// add single point to created shape
 			layer.vertex(point.x + (thickness / 2) * inverter * Math.cos(angle), point.y + (thickness / 2) * inverter * Math.sin(angle));
-
-			if (k === 0 || k === 1) seamPoints.push({ x: point.x + (thickness / 2) * inverter * Math.cos(angle), y: point.y + (thickness / 2) * inverter * Math.sin(angle) });
 		}
 		// close shape
 		layer.endShape(true);
 
-		return seamPoints;
-	}
-
-	// stitch seams between trunk polygons
-	stitchtrunkSeams(layer, points) {
-		for (let i = 0; i < points.length - 4; i += 4) {
-			layer.beginShape();
-			// this order is weird because of the equally weird order that points are pushed into this array
-			layer.vertex(points[i].x, points[i].y);
-			layer.vertex(points[i + 5].x, points[i + 5].y);
-			layer.vertex(points[i + 3].x, points[i + 3].y);
-			layer.vertex(points[i + 6].x, points[i + 6].y);
-			layer.endShape(true);
+		// fill gap between this and last trunk edge
+		if (lastEnd) {
+			const lastEndAng = Math.atan((lastEnd[1].y - lastEnd[0].y) / (lastEnd[1].x - lastEnd[0].x)) + Math.PI / 2;
+			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.trunk_gap || activeStylesheet);
 		}
 	}
 
 	// render branch polygons
-	renderBranch(layer, start, end, startThickness, endThickness) {
+	renderBranch(layer, start, end, startThickness, endThickness, lastEnd) {
 		const resolution = this.genome.branch_roughness;
 		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
 		const roughnessStrength = _p5.random(endThickness, startThickness);
 
-		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
+		const angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
 
 		// create new shape
@@ -245,23 +252,20 @@ class BurtonesqueTree {
 		// close shape
 		layer.endShape(true);
 
-		// stitching polygon corners with hexagons
-		if (start.x > end.x) {
-			layer.polygon(start.x, start.y, startThickness, 6, angle + Math.PI, Math.PI * 2 + angle);
-			layer.polygon(end.x, end.y, endThickness, 6, angle, Math.PI + angle);
-		} else {
-			layer.polygon(start.x, start.y, startThickness, 6, angle, Math.PI + angle);
-			layer.polygon(end.x, end.y, endThickness, 6, angle + Math.PI, Math.PI * 2 + angle);
+		// cfill gap between this and last branch edge
+		if (lastEnd) {
+			const lastEndAng = Math.atan((lastEnd[1].y - lastEnd[0].y) / (lastEnd[1].x - lastEnd[0].x)) + Math.PI / 2;
+			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.branch_gap || activeStylesheet);
 		}
 	}
 
 	// render whole tree
 	renderTree(trunk, branches) {
 		// call trunk render functions
-		let [trunkSeams, trunkThicknesses] = [[], []];
+		let trunkThicknesses = [];
 		const trunkLayer = this.treeCanvas.createLayer('trunk');
-		trunkLayer.setAttributeMult(TREE_STYLE);
-
+		trunkLayer.setAttributeMult(activeStylesheet.trunk || activeStylesheet);
+		let lastTrunkEnd = null;
 		for (let edge of trunk.edges) {
 			const [parent, child] = [trunk.nodes[edge.parent], trunk.nodes[edge.child]];
 
@@ -271,18 +275,17 @@ class BurtonesqueTree {
 			const startT = this.genome.base_thickness + kS * (this.genome.top_thickness - this.genome.base_thickness);
 			const endT = Math.max(0, this.genome.base_thickness + kE * (this.genome.top_thickness - this.genome.base_thickness));
 
-			const seamPoints = this.renderTrunk(trunkLayer, parent, child, startT, endT);
-			trunkSeams.push.apply(trunkSeams, seamPoints);
+			this.renderTrunk(trunkLayer, parent, child, startT, endT, lastTrunkEnd);
 			trunkThicknesses[edge.parent] = startT;
 			trunkThicknesses[edge.child] = endT;
-		}
 
-		this.stitchtrunkSeams(trunkLayer, trunkSeams);
+			lastTrunkEnd = [parent, child, endT];
+		}
 
 		// call branch render functions
 		const branchesLayer = this.treeCanvas.createLayer('branches');
-		branchesLayer.setAttributeMult(TREE_STYLE);
-
+		branchesLayer.setAttributeMult(activeStylesheet.branch || activeStylesheet);
+		let lastBranchEnd = null;
 		for (let branchEdge of branches.edges) {
 			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
 			const creator = branches.nodes[parent.creator];
@@ -294,18 +297,37 @@ class BurtonesqueTree {
 			// make last branch start out with the same thickness as the top of the tree — again, to avoid weird-looking stuff
 			if (parent.trunk_creator + 1 === trunk.nodes.length && parent.d === 0) startT = this.genome.top_thickness;
 
-			this.renderBranch(branchesLayer, parent, child, startT, endT);
+			// filter lastEnd to pass null when a new branch is started
+			const lastEndFiltered = lastBranchEnd && parent === lastBranchEnd[1] ? lastBranchEnd : null;
+			this.renderBranch(branchesLayer, parent, child, startT, endT, lastEndFiltered);
+
+			// save positions and thickness of last branch edge
+			lastBranchEnd = [parent, child, endT];
+
+			// branch sprouted from last branch node.
+			// fill the gap between the trunk and the last branch
+			if(parent.trunk_creator === lastTrunkEnd[1].d && parent.d === 0) {
+				const trunkEndAng = Math.atan((lastTrunkEnd[1].y - lastTrunkEnd[0].y) / (lastTrunkEnd[1].x - lastTrunkEnd[0].x)) + Math.PI / 2;
+				const branchStartAng = Math.atan((child.y - parent.y) / (child.x - parent.x)) + Math.PI / 2;
+				this.renderEdgeGapPolygon(branchesLayer, lastTrunkEnd[1], trunkEndAng, lastTrunkEnd[2], parent, branchStartAng, startT, activeStylesheet.trunk_branch_gap || activeStylesheet);
+			}
+
 		}
 	}
 
 	// generate new burton tree
-	generate() {
+	generate(debug = false) {
 		const trunk = { nodes: [], edges: [] };
 		const branches = { nodes: [], edges: [] };
 
+		// choose SVG stylesheet
+		activeStylesheet = debug ? debugStylesheet : stylesheet;
+
+		// create first trunk node at the bottm of  the canvas
 		trunk.nodes.push({ x: this.baseCoords[0], y: this.baseCoords[1], d: 0 });
 
 		_p5.randomSeed(this.seed);
+		_p5.noiseSeed(this.seed);
 		this.treeCanvas.clear();
 		this.buildTree(0, trunk, branches);
 		this.renderTree(trunk, branches);
