@@ -13,7 +13,7 @@
 	const handleSwitchLayout = () => {
 		expandedLayout = !expandedLayout;
 
-		if(expandedLayout) closeAbout();
+		if (expandedLayout) closeAbout();
 
 		const layoutFunction = expandedLayout ? Layout.expand : Layout.collapse;
 		const buttonsContainer = controlsContainer.children[1];
@@ -24,7 +24,7 @@
 	export const collapseLayout = () => {
 		expandedLayout = false;
 		Layout.collapse(controlsContainer.children[1]);
-	}
+	};
 
 	const handleNewSeed = () => {
 		tree.newSeed();
@@ -32,10 +32,18 @@
 	};
 
 	// reset parameters. Function is on the <TreeParameters> components
-	const handleResetParameters = () => treeParametersComponent.resetParameters();
+	const handleResetParameters = () => {
+		tree.resetGenome();
+		treeParametersComponent.updateUIparams();
+		tree.generate(debugStyle);
+	};
 
-	// TODO:
-	const handleRandomizeParamters = () => {};
+	// randomize genome and update the UI accordingly
+	const handleRandomizeParamters = () => {
+		tree.randomizeGenome();
+		treeParametersComponent.updateUIparams();
+		tree.generate(debugStyle);
+	};
 
 	const handleDownloadSvg = () => tree.exportSvg();
 
@@ -49,27 +57,26 @@
 		// I'm doing this to avoid multiple clicks before the promise is resolved.
 	};
 
-
 	window.getSeed = () => console.log(tree.seed);
 </script>
 
 <div bind:this={controlsContainer} id="controls-container">
 	<section>
 		<div class="section-title-button-cont">
-			<h3 class='section-title'>Tree Parameters</h3>
+			<h3 class="section-title">Tree Parameters</h3>
 			<span on:click={handleSwitchLayout} class="no-select">{expandedLayout ? 'collapse' : 'expand'}</span>
 		</div>
 		<TreeParameters bind:this={treeParametersComponent} {tree} {debugStyle} />
 	</section>
 	<div>
 		<section>
-			<h3 class='section-title'>Parameter Controls</h3>
+			<h3 class="section-title">Parameter Controls</h3>
 			<button class="def-bttn" on:click={handleNewSeed}>New Seed</button>
 			<button class="def-bttn" on:click={handleResetParameters}>Reset Parameters</button>
 			<button class="def-bttn" on:click={handleRandomizeParamters}>Randomize Parameters</button>
 		</section>
 		<section>
-			<h3 class='section-title'>Export</h3>
+			<h3 class="section-title">Export</h3>
 			<button class="def-bttn" on:click={handleDownloadSvg}>Download SVG</button>
 			<button class="def-bttn" on:click={handleDownloadPng} disabled={downloadingPng}>Download PNG</button>
 		</section>
@@ -96,5 +103,4 @@
 		display: flex;
 		flex-direction: column;
 	}
-
 </style>

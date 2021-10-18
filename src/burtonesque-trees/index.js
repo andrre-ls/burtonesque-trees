@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import Asvg from '../Asvg';
-import genomeStructure from './genomeStructure.js';
+import { genomeStructure, randomGenomeBoundOverrides } from './genomeStructure.js';
 import { downloadFile, countDecimals } from './utils.js';
 
 // https://p5js.org/
@@ -17,7 +17,7 @@ const _p5 = new p5(() => {});
 // SETTINGS -- might move this to its own file
 const BASE_ANGLE = -Math.PI / 4;
 const ANGLE_RANGE = [-Math.PI / 2, Math.PI / 3];
-const SPIRAL_FACTOR = Math.PI / 24;
+const SPIRAL_FACTOR = Math.PI / 48;
 const DOWNLOAD_PNG_HEIGHT = 2048;
 
 // SVG styles
@@ -46,7 +46,7 @@ class BurtonesqueTree {
 
 	// set new seed
 	newSeed(_seed) {
-		this.seed = _seed ?? parseInt(Math.random() * 100000);
+		this.seed = _seed ?? parseInt(Math.random() * 1000000);
 	}
 
 	// fill genome with default values
@@ -54,11 +54,23 @@ class BurtonesqueTree {
 		for (const geneName of Object.keys(genomeStructure)) this.genome[geneName] = genomeStructure[geneName].default;
 	}
 
+	// change single gene
+	updateGene(gene, value) {
+		if (!(gene in this.genome)) return;
+		this.genome[gene] = value;
+	}
+
+	// TODO:
 	// randomize entire genome
 	randomizeGenome() {
-		for (const geneName of Object.keys(genomeStructure)) {
-			this.genome[geneName] = genomeStructure[geneName].min + Math.random() * (genomeStructure[geneName].max - genomeStructure[geneName].min);
-			this.genome[geneName] = Number(this.genome[geneName].toFixed(countDecimals(genomeStructure[geneName].step)));
+		for (const gene of Object.keys(genomeStructure)) {
+			const bounds = randomGenomeBoundOverrides[gene] ?? [genomeStructure[gene].min, genomeStructure[gene].max];
+			let randomValue = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
+
+			if (gene === 'spiral_amount') randomValue = Math.random() > 0.5 ? 0 : randomValue;
+
+			// make sure the new value matches the predefined decimal count of the gene
+			this.genome[gene] = Number(randomValue.toFixed(countDecimals(genomeStructure[gene].step)));
 		}
 
 		// prevent end thicknessess from being greater than start thicknesses -- avoids weird-looking trees
@@ -101,7 +113,7 @@ class BurtonesqueTree {
 			if (trunkSide > this.genome.left_right_bias) branchAngle = Math.PI - branchAngle;
 		} else {
 			const inverter = trunkSide > this.genome.left_right_bias ? -1 : 1;
-			branchAngle = lastAngle + inverter * _p5.random() * (Math.PI - SPIRAL_FACTOR) * this.genome.spiral_amount + inverter * SPIRAL_FACTOR;
+			branchAngle = lastAngle + inverter * _p5.random() * (Math.PI - SPIRAL_FACTOR) * this.genome.spiral_amount;
 		}
 
 		// create new branch node
@@ -189,8 +201,8 @@ class BurtonesqueTree {
 	// render trunk polygons
 	renderTrunk(layer, start, end, startThickness, endThickness, lastEnd) {
 		const resolution = this.genome.trunk_roughness;
-		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
-		const roughnessStrength = (_p5.random(endThickness, startThickness) * 2) / 3;
+		const roughnessNoiseInc = _p5.random(0.0025, 0.07);
+		const roughnessStrength = _p5.map(this.genome.trunk_roughness, genomeStructure.trunk_roughness.min, genomeStructure.trunk_roughness.max, 0, 1) * (_p5.random(startThickness, endThickness) / 2);
 
 		let angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
@@ -226,8 +238,8 @@ class BurtonesqueTree {
 	// render branch polygons
 	renderBranch(layer, start, end, startThickness, endThickness, lastEnd) {
 		const resolution = this.genome.branch_roughness;
-		const roughnessNoiseInc = _p5.random(0.0025, 0.08);
-		const roughnessStrength = _p5.random(endThickness, startThickness);
+		const roughnessNoiseInc = _p5.random(0.0025, 0.07);
+		const roughnessStrength = _p5.map(this.genome.branch_roughness, genomeStructure.branch_roughness.min, genomeStructure.branch_roughness.max, 0, 1) * 2 * (_p5.random(startThickness, endThickness) / 3);
 
 		const angle = Math.atan((end.y - start.y) / (end.x - start.x)) + Math.PI / 2;
 		let inverter = 1;
@@ -252,7 +264,7 @@ class BurtonesqueTree {
 		// close shape
 		layer.endShape(true);
 
-		// cfill gap between this and last branch edge
+		// fill gap between this and last branch edge
 		if (lastEnd) {
 			const lastEndAng = Math.atan((lastEnd[1].y - lastEnd[0].y) / (lastEnd[1].x - lastEnd[0].x)) + Math.PI / 2;
 			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.branch_gap || activeStylesheet);
@@ -301,17 +313,28 @@ class BurtonesqueTree {
 			const lastEndFiltered = lastBranchEnd && parent === lastBranchEnd[1] ? lastBranchEnd : null;
 			this.renderBranch(branchesLayer, parent, child, startT, endT, lastEndFiltered);
 
+			// if at the end of current branch, render an hexagonal cap
+			if (lastEndFiltered === null && lastBranchEnd !== null) {
+				const branchEndAng = Math.atan((lastBranchEnd[1].y - lastBranchEnd[0].y) / (lastBranchEnd[1].x - lastBranchEnd[0].x)) + Math.PI / 2;
+				branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch || activeStylesheet);
+			}
+
 			// save positions and thickness of last branch edge
 			lastBranchEnd = [parent, child, endT];
 
 			// branch sprouted from last branch node.
 			// fill the gap between the trunk and the last branch
-			if(parent.trunk_creator === lastTrunkEnd[1].d && parent.d === 0) {
+			if (parent.trunk_creator === lastTrunkEnd[1].d && parent.d === 0) {
 				const trunkEndAng = Math.atan((lastTrunkEnd[1].y - lastTrunkEnd[0].y) / (lastTrunkEnd[1].x - lastTrunkEnd[0].x)) + Math.PI / 2;
 				const branchStartAng = Math.atan((child.y - parent.y) / (child.x - parent.x)) + Math.PI / 2;
 				this.renderEdgeGapPolygon(branchesLayer, lastTrunkEnd[1], trunkEndAng, lastTrunkEnd[2], parent, branchStartAng, startT, activeStylesheet.trunk_branch_gap || activeStylesheet);
 			}
+		}
 
+		// draws last branch's cap -- it doesn't do it inside the for loop because the end-of-branch check runs 1 loop behind.
+		if (lastBranchEnd !== null) {
+			const branchEndAng = Math.atan((lastBranchEnd[1].y - lastBranchEnd[0].y) / (lastBranchEnd[1].x - lastBranchEnd[0].x)) + Math.PI / 2;
+			branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch || activeStylesheet);
 		}
 	}
 
@@ -331,12 +354,6 @@ class BurtonesqueTree {
 		this.treeCanvas.clear();
 		this.buildTree(0, trunk, branches);
 		this.renderTree(trunk, branches);
-	}
-
-	// change single gene
-	updateGene(gene, value) {
-		if (!(gene in this.genome)) return;
-		this.genome[gene] = value;
 	}
 
 	// download tree as SVG

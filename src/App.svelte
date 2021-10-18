@@ -5,7 +5,7 @@
 	import { updateColourMode } from './ui-utils/colourMode.js';
 
 	let isLightMode = true;
-	let showAbout = false;
+	let showAbout = true; // TODO: should be false
 	let treeControlsComponent;
 
 	const tree = new BurtonTree([1024, 1024]);
@@ -44,7 +44,7 @@
 	</header>
 
 	<div id="main-container">
-		<TreeControls bind:this={treeControlsComponent} {tree} {closeAbout} debugStyle={showAbout}/>
+		<TreeControls bind:this={treeControlsComponent} {tree} {closeAbout} debugStyle={showAbout} />
 		<TreePreview {tree} />
 
 		{#if showAbout}
@@ -54,7 +54,23 @@
 					<span on:click={closeAbout}>close about</span>
 				</div>
 				<div id="about-content">
-					<br />
+					<div>
+						<p>
+							This is a simple generative design project centred on creating SVG tree silhouettes inspired by the visual aesthetic most commonly attributed to
+							<a target="_blank" href="https://en.wikipedia.org/wiki/Tim_Burton">Tim Burton</a>. Each tree is randomly generated based on a unique seed and a set of parameters.
+						</p>
+						<h4>Credits</h4>
+						<p>
+							The tree generator script relies on the <i>random()</i> and <i>noise()</i> methods of
+							<a target="_blank" href="https://p5js.org/">p5.js</a>, and the user interface you are looking at was built with
+							<a target="_blank" href="https://svelte.dev/">Svelte</a>. The user interface typeface is
+							<a target="_blank" href="https://fonts.google.com/specimen/IBM+Plex+Mono?query=ibm#standard-styles">IBM Plex Mono</a>.
+						</p>
+						<p id="its-aaa-me">
+							// ---------------------------
+							<a target="_blank" href="https://github.com/andrre-ls">André Santos</a>, 2021
+						</p>
+					</div>
 				</div>
 			</section>
 		{/if}
@@ -62,17 +78,6 @@
 </main>
 
 <style>
-	#about {
-		position: absolute;
-		left: calc(var(--side-bar-width) + 4.5rem);
-	}
-
-	#about-content {
-		width: var(--about-content-width);
-		border: var(--stroke-size) solid var(--clr-main);
-		border-radius: var(--stroke-size);
-	}
-
 	main {
 		display: grid;
 		grid-template-rows: calc(1.5rem + var(--page-margin)) auto;
@@ -134,5 +139,56 @@
 		display: grid;
 		grid-template-columns: var(--side-bar-width) auto;
 		grid-column-gap: 4.5rem;
+		position: relative;
+	}
+
+	/* ABOUT */
+	#about {
+		position: absolute;
+		left: calc(var(--side-bar-width) + 4.5rem);
+		z-index: 20000;
+	}
+
+	#about-content {
+		width: var(--about-content-width);
+		border: var(--stroke-size) solid var(--clr-main);
+		border-radius: var(--stroke-size);
+		background-color: var(--clr-background);
+	}
+
+	#about-content > div {
+		padding: 0.5rem 1.5rem;
+	}
+
+	#about-content p {
+		font-weight: 400;
+		line-height: 1.5rem;
+		color: var(--clr-main);
+		text-align: justify;
+		hyphens: auto;
+	}
+
+	#about-content h4 {
+		font-weight: 700;
+		margin-top: 2rem;
+		margin-bottom: 0;
+	}
+
+	#about-content a {
+		text-decoration: underline;
+		color: var(--clr-main);
+	}
+
+	#about-content a:hover {
+		color: var(--clr-hover);
+		cursor: pointer;
+	}
+
+	#about-content #its-aaa-me {
+		margin-top: 2rem;
+	}
+
+	#its-aaa-me > a {
+		text-decoration: none;
 	}
 </style>

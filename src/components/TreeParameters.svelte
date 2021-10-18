@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import genomeStructure from '../burtonesque-trees/genomeStructure.js';
+	import { genomeStructure } from '../burtonesque-trees/genomeStructure.js';
 	import { genomeDictionary } from '../ui-utils/dictionary.js';
 
 	export let tree;
@@ -22,16 +22,10 @@
 	});
 
 	// parameter values
-	const parameterState = {};
+	let parameterState = {};
 
-	// revert back to default parameters
-	export const resetParameters = () => {
-		for (const gene of Object.keys(genomeStructure)) {
-			parameterState[gene] = genomeStructure[gene].default;
-			tree.updateGene(gene, parameterState[gene]);
-		}
-		tree.generate(debugStyle);
-	};
+	// update the UI parameterState to match the tree's genome
+	export const updateUIparams = () => (parameterState = { ...tree.genome });
 
 	// update tree parameters on UI input
 	const handleParameterChange = (e) => {
@@ -44,7 +38,7 @@
 	// map from range1 to range2 -- to convert all parameters to 0-100%
 	const mapValue = (value, x1, y1, x2, y2) => parseInt(((value - x1) * (y2 - x2)) / (y1 - x1) + x2);
 
-	resetParameters();
+	updateUIparams();
 </script>
 
 <div bind:this={paramContainer} id="tree-parameters" class="def-scroll">
@@ -70,6 +64,7 @@
 		border: var(--stroke-size) solid var(--clr-main);
 		border-radius: var(--stroke-size);
 		margin-top: 0.5rem;
+		background-color: var(--clr-background);
 	}
 
 	#all-params-cont {

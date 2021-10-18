@@ -1,4 +1,3 @@
 # TODO:
     > Favicon
-    > About
-    > Random Parameters
+    > Default Parameters

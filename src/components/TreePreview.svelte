@@ -13,6 +13,8 @@
 	#tree-preview-container {
 		border-bottom: var(--clr-main) solid var(--stroke-size);
 		pointer-events: none;
+		position: relative;
+		z-index: -100;
 	}
 
 	#tree-preview-container > div {

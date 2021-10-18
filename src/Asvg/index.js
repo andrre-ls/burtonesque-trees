@@ -14,16 +14,13 @@ const setMultipleAttributes = (node, attributes) => {
 
 // layer object where shapes are drawn
 class Alayer {
-	#currentPath;
-	#layer;
-
 	constructor(_id) {
 		// DOM node
-		this.#layer = document.createElementNS(SVG_URI, 'g');
-		this.#layer.id = _id;
+		this.layer = document.createElementNS(SVG_URI, 'g');
+		this.layer.id = _id;
 
 		// ever-available path element
-		this.#currentPath = null;
+		this.currentPath = null;
 	}
 
 	// draw rect
@@ -36,7 +33,7 @@ class Alayer {
 		// optional attributes
 		setMultipleAttributes(ellipseNode, styleAttributes);
 
-		this.#layer.append(ellipseNode);
+		this.layer.append(ellipseNode);
 	}
 
 	// draw and append ellipse (from center)
@@ -50,7 +47,7 @@ class Alayer {
 		// optional attributes
 		setMultipleAttributes(ellipseNode, styleAttributes);
 
-		this.#layer.append(ellipseNode);
+		this.layer.append(ellipseNode);
 	}
 
 	// draw and append ellipse (from corner)
@@ -60,9 +57,9 @@ class Alayer {
 
 	// draw n-agon, where n = number of sides (basically an hexagon of variable sides)
 	nAgon(x, y, radius, nPoints = 6, rotation = 0, startAng = 0, endAng = Math.PI * 2, styleAttributes = {}) {
-		const angle = (Math.PI * 2) / nPoints;
+		const angleInc = (Math.PI * 2) / nPoints;
 		this.beginShape(styleAttributes);
-		for (let a = startAng; a <= endAng; a += angle) {
+		for (let a = startAng; a <= endAng; a += angleInc) {
 			this.vertex(x + (Math.cos(a + rotation) * radius) / 2, y + (Math.sin(a + rotation) * radius) / 2);
 		}
 		this.endShape(true);
@@ -70,48 +67,48 @@ class Alayer {
 
 	// begin creating path
 	beginShape(styleAttributes = {}) {
-		this.#currentPath = {
+		this.currentPath = {
 			d: '',
 			node: document.createElementNS(SVG_URI, 'path'),
 		};
 
 		// optional attributes
-		setMultipleAttributes(this.#currentPath.node, styleAttributes);
+		setMultipleAttributes(this.currentPath.node, styleAttributes);
 	}
 
 	// add point to path
 	vertex(x, y) {
-		if (this.#currentPath === null) return;
+		if (this.currentPath === null) return;
 
-		this.#currentPath.d += this.#currentPath.d.length === 0 ? 'M' : 'L';
-		this.#currentPath.d += `${x} ${y} `;
+		this.currentPath.d += this.currentPath.d.length === 0 ? 'M' : 'L';
+		this.currentPath.d += `${x} ${y} `;
 	}
 
 	// close and append path
 	endShape(close = true) {
-		if (this.#currentPath === null) return;
-		if (this.#currentPath.d.length === 0) return;
-		if (close) this.#currentPath.d += 'z';
-		this.#currentPath.node.setAttribute('d', this.#currentPath.d);
-		this.#layer.append(this.#currentPath.node);
+		if (this.currentPath === null) return;
+		if (this.currentPath.d.length === 0) return;
+		if (close) this.currentPath.d += 'z';
+		this.currentPath.node.setAttribute('d', this.currentPath.d);
+		this.layer.append(this.currentPath.node);
 	}
 
 	// set single attribute in layer DOM node
 	setAttribute(attributeKey, value) {
-		this.#layer.setAttribute(attributeKey, value);
+		this.layer.setAttribute(attributeKey, value);
 	}
 
 	// set multiple attribures in layer DOM node
 	setAttributeMult(attributeObject) {
-		setMultipleAttributes(this.#layer, attributeObject);
+		setMultipleAttributes(this.layer, attributeObject);
 	}
 
 	clear() {
-		this.#layer.innerHTML = '';
+		this.layer.innerHTML = '';
 	}
 
 	get node() {
-		return this.#layer;
+		return this.layer;
 	}
 }
 
@@ -147,10 +144,12 @@ class Asvg {
 		return false;
 	}
 
+	// set single attribute
 	setAttribute(attributeKey, value) {
 		this.canvas.setAttribute(attributeKey, value);
 	}
 
+	// clear entire canvas
 	clear() {
 		this.canvas.innerHTML = '';
 	}
