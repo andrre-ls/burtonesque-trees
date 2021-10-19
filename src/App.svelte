@@ -5,7 +5,7 @@
 	import { updateColourMode } from './ui-utils/colourMode.js';
 
 	let isLightMode = true;
-	let showAbout = true; // TODO: should be false
+	let showAbout = false;
 	let treeControlsComponent;
 
 	const tree = new BurtonTree([1024, 1024]);
@@ -51,20 +51,21 @@
 			<section id="about">
 				<div class="section-title-button-cont">
 					<h3 class="section-title">About</h3>
-					<span on:click={closeAbout}>close about</span>
+					<span on:click={closeAbout} class='no-select'>close about</span>
 				</div>
 				<div id="about-content">
 					<div>
 						<p>
-							This is a simple generative design project centred on creating SVG tree silhouettes inspired by the visual aesthetic most commonly attributed to
-							<a target="_blank" href="https://en.wikipedia.org/wiki/Tim_Burton">Tim Burton</a>. Each tree is randomly generated based on a unique seed and a set of parameters.
+							This is a 
+							<a target="_blank" href="https://en.wikipedia.org/wiki/Generative_design">generative design</a>
+							 project that draws tree silhouettes inspired by the visual aesthetic most commonly associated with
+							<a target="_blank" href="https://en.wikipedia.org/wiki/Tim_Burton">Tim Burton</a>. Each tree is randomly generated based on an internal seed and the set of parameters available on the left side of the page.
 						</p>
 						<h4>Credits</h4>
 						<p>
 							The tree generator script relies on the <i>random()</i> and <i>noise()</i> methods of
-							<a target="_blank" href="https://p5js.org/">p5.js</a>, and the user interface you are looking at was built with
-							<a target="_blank" href="https://svelte.dev/">Svelte</a>. The user interface typeface is
-							<a target="_blank" href="https://fonts.google.com/specimen/IBM+Plex+Mono?query=ibm#standard-styles">IBM Plex Mono</a>.
+							<a target="_blank" href="https://p5js.org/">p5.js</a>, and the user interface you are looking at was built with 
+							<a target="_blank" href="https://svelte.dev/">Svelte</a>.
 						</p>
 						<p id="its-aaa-me">
 							// ---------------------------

@@ -109,6 +109,10 @@ main {
 	padding: 0.75rem 1.25rem;
 	cursor: pointer;
 	margin-top: 0.5rem;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 .def-bttn:hover {
@@ -185,6 +189,10 @@ main {
 .def-slider::-webkit-slider-runnable-track:active {
 	background-color: var(--clr-focus);
 	background-clip: content-box;
+}
+
+.def-slider:focus::-webkit-slider-runnable-track {
+	background-color: var(--clr-hover);
 }
 
 .def-slider::-moz-range-track {
