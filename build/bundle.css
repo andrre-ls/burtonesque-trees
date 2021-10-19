@@ -1,0 +1,258 @@
+@import url(https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap);
+/* TODO: only import font weight used */
+
+:root {
+	/* Color  */
+	/* 		Luminosity values */
+	--lum-main: 10;
+	--lum-secondary: 125;
+	--lum-hover: 125;
+	--lum-focus: 90;
+	--lum-hover-bg: 225;
+	--lum-focus-bg: 200;
+	--lum-background: 250;
+	/* 		Color values */
+	--clr-main: rgba(var(--lum-main), var(--lum-main), var(--lum-main), 1);
+	--clr-secondary: rgba(var(--lum-secondary), var(--lum-secondary), var(--lum-secondary), 1);
+	--clr-background: rgba(var(--lum-background), var(--lum-background), var(--lum-background), 1);
+	--clr-hover: rgba(var(--lum-hover), var(--lum-hover), var(--lum-hover), 1);
+	--clr-focus: rgba(var(--lum-focus), var(--lum-focus), var(--lum-focus), 1);
+	--clr-hover-bg: rgba(var(--lum-hover-bg), var(--lum-hover-bg), var(--lum-hover-bg), 1);
+	--clr-focus-bg: rgba(var(--lum-focus-bg), var(--lum-focus-bg), var(--lum-focus-bg), 1);
+
+	/* Typography */
+	--base-font-size: 12px;
+
+	/* Layout */
+	--page-margin: 4rem;
+	--side-bar-width: 260px;
+	--about-content-width: 390px;
+
+	/* side bar options */
+	--side-bar-collapsed: 260px;
+	--side-bar-expanded-parameters: 260px;
+	--side-bar-expanded-buttons: 200px;
+
+	/* Graphic Elements */
+	--stroke-size: 2px;
+}
+
+* {
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: var(--base-font-size);
+}
+
+body {
+	display: flex;
+	justify-content: center;
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+	background-color: var(--clr-background);
+}
+
+main {
+	max-width: 1920px;
+}
+
+.no-select {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.section-title {
+	font-size: 1.2rem;
+	font-style: italic;
+	font-weight: 700;
+	margin: 0;
+	margin-bottom: 0.5rem;
+	color: var(--clr-main);
+}
+
+.section-title-button-cont {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
+
+.section-title-button-cont > span {
+	font-size: 1rem;
+	font-weight: 500;
+	font-style: italic;
+	cursor: pointer;
+	color: var(--clr-secondary);
+	/* So the button is has a bigger bounding box and is therefore easier to click */
+	padding: 0.5rem 1rem;
+	transform: translateX(1rem);
+	text-align: right;
+}
+
+.section-title-button-cont > span:hover {
+	color: var(--clr-focus-bg);
+}
+
+/* Button */
+.def-bttn {
+	position: relative;
+	width: 100%;
+	max-width: 300px;
+	color: var(--clr-main);
+	font-size: 1rem;
+	text-align: left;
+	font-weight: 700;
+	background-color: var(--clr-background);
+	border: var(--stroke-size) solid var(--clr-main);
+	border-radius: var(--stroke-size);
+	padding: 0.75rem 1.25rem;
+	cursor: pointer;
+	margin-top: 0.5rem;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.def-bttn:hover {
+	background-color: var(--clr-hover-bg);
+}
+
+.def-bttn:active {
+	background-color: var(--clr-focus-bg);
+}
+
+/* Slider */
+.def-slider {
+	-webkit-appearance: none;
+	margin-top: 1rem;
+	width: 100%;
+	background-color: transparent;
+}
+
+.def-slider:focus {
+	outline: none;
+}
+
+/* slider thumb */
+.def-slider::-webkit-slider-thumb {
+	height: 0.9rem;
+	width: 0.9rem;
+	background-color: var(--clr-main);
+	border-radius: var(--stroke-size);
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: calc(-0.45rem + var(--stroke-size) / 2);
+}
+
+.def-slider::-webkit-slider-thumb:hover {
+	background-color: var(--clr-hover);
+}
+
+.def-slider::-moz-range-thumb {
+	height: 0.9rem;
+	width: 0.9rem;
+	background-color: var(--clr-main);
+	border-radius: var(--stroke-size);
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: calc(-0.45rem + var(--stroke-size) / 2);
+}
+
+.def-slider::-ms-thumb {
+	height: 0.9rem;
+	width: 0.9rem;
+	background-color: var(--clr-main);
+	border-radius: var(--stroke-size);
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: calc(-0.45rem + var(--stroke-size) / 2);
+}
+
+/* Track */
+.def-slider::-webkit-slider-runnable-track {
+	width: 100%;
+	height: var(--stroke-size);
+	cursor: pointer;
+	background-color: var(--clr-main);
+	background-clip: content-box;
+	box-sizing: content-box;
+	padding: 0.5rem 0;
+}
+
+.def-slider::-webkit-slider-runnable-track:hover {
+	background-color: var(--clr-hover);
+	background-clip: content-box;
+}
+
+.def-slider::-webkit-slider-runnable-track:active {
+	background-color: var(--clr-focus);
+	background-clip: content-box;
+}
+
+.def-slider:focus::-webkit-slider-runnable-track {
+	background-color: var(--clr-hover);
+}
+
+.def-slider::-moz-range-track {
+	width: 100%;
+	height: var(--stroke-size);
+	cursor: pointer;
+	background-color: var(--clr-main);
+	background-clip: content-box;
+	box-sizing: content-box;
+	padding: 0.5rem 0;
+}
+
+.def-slider::-moz-range-track:hover {
+	background-color: var(--clr-hover);
+	background-clip: content-box;
+}
+
+.def-slider::-moz-range-track:active {
+	background-color: var(--clr-focus);
+	background-clip: content-box;
+}
+
+.def-slider::-ms-track {
+	width: 100%;
+	height: var(--stroke-size);
+	cursor: pointer;
+	background-color: var(--clr-main);
+	background-clip: content-box;
+	box-sizing: content-box;
+	padding: 0.5rem 0;
+}
+
+.def-slider::-ms-track:hover {
+	background-color: var(--clr-hover);
+	background-clip: content-box;
+}
+
+.def-slider::-ms-track:active {
+	background-color: var(--clr-focus);
+	background-clip: content-box;
+}
+
+/* Scrollbar */
+.def-scroll::-webkit-scrollbar {
+	width: 0.5rem;
+}
+
+.def-scroll::-webkit-scrollbar-track {
+	background-color: var(--clr-hover-bg);
+}
+
+.def-scroll::-webkit-scrollbar-thumb {
+	background-color: var(--clr-main);
+}
+
+.def-scroll::-webkit-scrollbar-thumb:hover,
+.def-scroll::-webkit-scrollbar-thumb:active {
+	background-color: var(--clr-hover);
+}
+
+#tree-parameters.svelte-bw6bkw.svelte-bw6bkw{position:relative;height:200px;flex:auto;overflow-y:scroll;border:var(--stroke-size) solid var(--clr-main);border-radius:var(--stroke-size);margin-top:0.5rem;background-color:var(--clr-background)}#all-params-cont.svelte-bw6bkw.svelte-bw6bkw{position:relative;top:-2rem;padding:0 1.5rem}.param-cont.svelte-bw6bkw.svelte-bw6bkw{margin-top:2.25rem;position:relative;width:calc(100% - 1rem)}.param-cont.svelte-bw6bkw.svelte-bw6bkw:first-child{margin-top:2rem}h4.svelte-bw6bkw.svelte-bw6bkw{font-size:1rem;font-weight:700;margin:0;color:var(--clr-main);white-space:nowrap}h4.svelte-bw6bkw>span.svelte-bw6bkw{font-weight:400;color:var(--clr-secondary)}.scroll-gradient.svelte-bw6bkw.svelte-bw6bkw{position:sticky;bottom:0;height:2rem;background:linear-gradient(0deg, var(--clr-background) 0%, rgba(var(--lum-background), var(--lum-background), var(--lum-background), 0) 100%)}.scroll-gradient.svelte-bw6bkw.svelte-bw6bkw:nth-child(1){position:sticky;top:0;height:2rem;background:linear-gradient(180deg, var(--clr-background) 0%, rgba(var(--lum-background), var(--lum-background), var(--lum-background), 0) 100%);z-index:99999}#scroll-pointer.svelte-bw6bkw.svelte-bw6bkw{position:sticky;bottom:0;padding:0.5rem;text-align:center;background-color:var(--clr-background);color:var(--clr-main);transition:opacity 1s ease;animation-iteration-count:7;animation-direction:alternate;animation-duration:1s;animation-name:svelte-bw6bkw-scrollFlicker}@keyframes svelte-bw6bkw-scrollFlicker{from{color:rgba(var(--lum-main), var(--lum-main), var(--lum-main), 0.25)}to{color:var(--clr-main)}}
+#controls-container.svelte-1esl0rz.svelte-1esl0rz{width:100%;display:flex;flex-direction:column;position:relative}section.svelte-1esl0rz.svelte-1esl0rz,#controls-container.svelte-1esl0rz>div.svelte-1esl0rz{margin-top:2.75rem;width:100%}section.svelte-1esl0rz.svelte-1esl0rz:first-child{margin-top:0;flex:auto;display:flex;flex-direction:column}
+#tree-preview-container.svelte-37dxub.svelte-37dxub{border-bottom:var(--clr-main) solid var(--stroke-size);pointer-events:none;position:relative;z-index:-100}#tree-preview-container.svelte-37dxub>div.svelte-37dxub{display:flex;justify-content:center;align-items:flex-end;position:relative;height:100%}#tree-preview-container > div > svg{position:absolute;height:100%}
+main.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{display:grid;grid-template-rows:calc(1.5rem + var(--page-margin)) auto;grid-row-gap:3rem;margin:var(--page-margin);margin-top:0;position:fixed;width:calc(100vw - 2 * var(--page-margin));height:calc(100vh - var(--page-margin))}header.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{position:relative;font-weight:500;width:100%;color:var(--clr-main)}header.svelte-1vx1yxm>ul.svelte-1vx1yxm.svelte-1vx1yxm{position:absolute;bottom:0;padding:0;margin:0}header.svelte-1vx1yxm>ul.svelte-1vx1yxm>li.svelte-1vx1yxm{vertical-align:baseline;display:inline-block;margin-left:1.75rem;padding:0.75rem 1.5rem;color:var(--clr-main)}#header-title.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{font-weight:bold;font-size:1.5rem;margin:0;padding-left:0}#header-title.svelte-1vx1yxm>i.svelte-1vx1yxm.svelte-1vx1yxm{font-size:1.5rem}.header-bttn.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{cursor:pointer}.header-bttn.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm:hover{color:var(--clr-hover)}#colour-mode-bttn.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{width:5.5rem;white-space:nowrap}#main-container.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{display:grid;grid-template-columns:var(--side-bar-width) auto;grid-column-gap:4.5rem;position:relative}#about.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{position:absolute;left:calc(var(--side-bar-width) + 4.5rem);z-index:20000}#about-content.svelte-1vx1yxm.svelte-1vx1yxm.svelte-1vx1yxm{width:var(--about-content-width);border:var(--stroke-size) solid var(--clr-main);border-radius:var(--stroke-size);background-color:var(--clr-background)}#about-content.svelte-1vx1yxm>div.svelte-1vx1yxm.svelte-1vx1yxm{padding:0.5rem 1.5rem}#about-content.svelte-1vx1yxm p.svelte-1vx1yxm.svelte-1vx1yxm{font-weight:400;line-height:1.5rem;color:var(--clr-main);text-align:justify;hyphens:auto}#about-content.svelte-1vx1yxm h4.svelte-1vx1yxm.svelte-1vx1yxm{font-weight:700;margin-top:2rem;margin-bottom:0}#about-content.svelte-1vx1yxm a.svelte-1vx1yxm.svelte-1vx1yxm{text-decoration:underline;color:var(--clr-main)}#about-content.svelte-1vx1yxm a.svelte-1vx1yxm.svelte-1vx1yxm:hover{color:var(--clr-hover);cursor:pointer}#about-content.svelte-1vx1yxm #its-aaa-me.svelte-1vx1yxm.svelte-1vx1yxm{margin-top:2rem}#its-aaa-me.svelte-1vx1yxm>a.svelte-1vx1yxm.svelte-1vx1yxm{text-decoration:none}
