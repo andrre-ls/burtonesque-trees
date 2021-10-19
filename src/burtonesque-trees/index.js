@@ -191,9 +191,9 @@ class BurtonesqueTree {
 	// render a polygon between two edges
 	renderEdgeGapPolygon(layer, end1Pos, angle1, thickness1, start2Pos, angle2, thickness2, styleAttributes = {}) {
 		layer.beginShape(styleAttributes);
-		layer.vertex(end1Pos.x - (thickness2 / 2) * Math.cos(angle1), end1Pos.y - (thickness1 / 2) * Math.sin(angle1));
+		layer.vertex(end1Pos.x - (thickness1 / 2) * Math.cos(angle1), end1Pos.y - (thickness1 / 2) * Math.sin(angle1));
 		layer.vertex(start2Pos.x - (thickness2 / 2) * Math.cos(angle2), start2Pos.y - (thickness2 / 2) * Math.sin(angle2));
-		layer.vertex(end1Pos.x + (thickness2 / 2) * Math.cos(angle1), end1Pos.y + (thickness1 / 2) * Math.sin(angle1));
+		layer.vertex(end1Pos.x + (thickness1 / 2) * Math.cos(angle1), end1Pos.y + (thickness1 / 2) * Math.sin(angle1));
 		layer.vertex(start2Pos.x + (thickness2 / 2) * Math.cos(angle2), start2Pos.y + (thickness2 / 2) * Math.sin(angle2));
 		layer.endShape();
 	}
@@ -313,7 +313,7 @@ class BurtonesqueTree {
 			const lastEndFiltered = lastBranchEnd && parent === lastBranchEnd[1] ? lastBranchEnd : null;
 			this.renderBranch(branchesLayer, parent, child, startT, endT, lastEndFiltered);
 
-			// if at the end of current branch, render an hexagonal cap
+			// branch end cap -- if at the end of current branch, render an hexagonal cap
 			if (lastEndFiltered === null && lastBranchEnd !== null) {
 				const branchEndAng = Math.atan((lastBranchEnd[1].y - lastBranchEnd[0].y) / (lastBranchEnd[1].x - lastBranchEnd[0].x)) + Math.PI / 2;
 				branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch || activeStylesheet);
