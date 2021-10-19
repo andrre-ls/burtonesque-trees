@@ -163,23 +163,27 @@ class Asvg {
 	// export canvas as a PNG. Returns a promise.
 	getPng(newHeight) {
 		return new Promise((resolve, reject) => {
-			// clone canvas
-			let clonedSvg = this.getSvg();
+			try {
+				// clone canvas
+				let clonedSvg = this.getSvg();
 
-			// get pixels dimensions
-			const [svgWidth, svgHeight] = [clonedSvg.getAttribute('width'), clonedSvg.getAttribute('height')];
+				// get pixels dimensions
+				const [svgWidth, svgHeight] = [clonedSvg.getAttribute('width'), clonedSvg.getAttribute('height')];
 
-			// resize if needed
-			if (newHeight) {
-				clonedSvg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
-				clonedSvg.setAttribute('width', (svgWidth * newHeight) / svgHeight);
-				clonedSvg.setAttribute('height', newHeight);
+				// resize if needed
+				if (newHeight) {
+					clonedSvg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+					clonedSvg.setAttribute('width', (svgWidth * newHeight) / svgHeight);
+					clonedSvg.setAttribute('height', newHeight);
+				}
+
+				// convert svg to image
+				const convertedCanvas = document.createElement('img');
+				convertedCanvas.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(clonedSvg)));
+				convertedCanvas.onload = () => resolve(convertedCanvas);
+			} catch(e) {
+				reject(e);
 			}
-
-			// convert svg to image
-			const convertedCanvas = document.createElement('img');
-			convertedCanvas.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(clonedSvg)));
-			convertedCanvas.onload = () => resolve(convertedCanvas);
 		});
 	}
 

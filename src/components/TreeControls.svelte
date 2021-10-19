@@ -57,7 +57,8 @@
 		// I'm doing this to avoid multiple clicks before the promise is resolved.
 	};
 
-	window.getSeed = () => console.log(tree.seed);
+	window.getSeed = () => tree.seed;
+
 </script>
 
 <div bind:this={controlsContainer} id="controls-container">

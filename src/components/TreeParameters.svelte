@@ -33,6 +33,8 @@
 		if (!(gene in parameterState)) return;
 		tree.updateGene(gene, parameterState[gene]);
 		tree.generate(debugStyle);
+
+		console.log(gene, parameterState[gene]);
 	};
 
 	// map from range1 to range2 -- to convert all parameters to 0-100%

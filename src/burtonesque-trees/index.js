@@ -1,6 +1,7 @@
 import p5 from 'p5';
 import Asvg from '../Asvg';
 import { genomeStructure, randomGenomeBoundOverrides } from './genomeStructure.js';
+import INIT_SEEDS from './initSeeds.js';
 import { downloadFile, countDecimals } from './utils.js';
 
 // https://p5js.org/
@@ -36,7 +37,7 @@ class BurtonesqueTree {
 		// define starting parameters and seed
 		this.genome = {};
 		this.resetGenome();
-		this.seed = parseInt(Math.random() * 100000);
+		this.seed = INIT_SEEDS[parseInt(Math.random() * INIT_SEEDS.length)];
 
 		// create canvas
 		this.canvasSize = _canvasSize ?? [512, 512];
@@ -46,7 +47,7 @@ class BurtonesqueTree {
 
 	// set new seed
 	newSeed(_seed) {
-		this.seed = _seed ?? parseInt(Math.random() * 1000000);
+		this.seed = _seed ?? parseInt(Math.random() * 10000000);
 	}
 
 	// fill genome with default values
@@ -359,7 +360,7 @@ class BurtonesqueTree {
 	// download tree as SVG
 	exportSvg() {
 		const svgUrl = URL.createObjectURL(this.treeCanvas.getSvg(true));
-		downloadFile(svgUrl, 'burtonesque-tree.svg');
+		downloadFile(svgUrl, `burtonesque-tree--${this.seed}.svg`);
 	}
 
 	// download tree as PNG
@@ -374,7 +375,7 @@ class BurtonesqueTree {
 		canvas.getContext('2d').drawImage(treeImage, 0, 0);
 		const canvasUrl = canvas.toDataURL();
 
-		downloadFile(canvasUrl, 'burtonesque-tree.png');
+		downloadFile(canvasUrl, `burtonesque-tree--${this.seed}.png`);
 	}
 
 	get canvas() {
