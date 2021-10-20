@@ -232,7 +232,7 @@ class BurtonesqueTree {
 		// fill gap between this and last trunk edge
 		if (lastEnd) {
 			const lastEndAng = Math.atan((lastEnd[1].y - lastEnd[0].y) / (lastEnd[1].x - lastEnd[0].x)) + Math.PI / 2;
-			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.trunk_gap || activeStylesheet);
+			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.trunk_gap ?? {});
 		}
 	}
 
@@ -268,7 +268,7 @@ class BurtonesqueTree {
 		// fill gap between this and last branch edge
 		if (lastEnd) {
 			const lastEndAng = Math.atan((lastEnd[1].y - lastEnd[0].y) / (lastEnd[1].x - lastEnd[0].x)) + Math.PI / 2;
-			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.branch_gap || activeStylesheet);
+			this.renderEdgeGapPolygon(layer, lastEnd[1], lastEndAng, lastEnd[2], start, angle, startThickness, activeStylesheet.branch_gap ?? {});
 		}
 	}
 
@@ -277,7 +277,7 @@ class BurtonesqueTree {
 		// call trunk render functions
 		let trunkThicknesses = [];
 		const trunkLayer = this.treeCanvas.createLayer('trunk');
-		trunkLayer.setAttributeMult(activeStylesheet.trunk || activeStylesheet);
+		trunkLayer.setAttributeMult(activeStylesheet.trunk ?? activeStylesheet);
 		let lastTrunkEnd = null;
 		for (let edge of trunk.edges) {
 			const [parent, child] = [trunk.nodes[edge.parent], trunk.nodes[edge.child]];
@@ -297,7 +297,7 @@ class BurtonesqueTree {
 
 		// call branch render functions
 		const branchesLayer = this.treeCanvas.createLayer('branches');
-		branchesLayer.setAttributeMult(activeStylesheet.branch || activeStylesheet);
+		branchesLayer.setAttributeMult(activeStylesheet.branch ?? activeStylesheet);
 		let lastBranchEnd = null;
 		for (let branchEdge of branches.edges) {
 			const [parent, child] = [branches.nodes[branchEdge.parent], branches.nodes[branchEdge.child]];
@@ -317,7 +317,7 @@ class BurtonesqueTree {
 			// branch end cap -- if at the end of current branch, render an hexagonal cap
 			if (lastEndFiltered === null && lastBranchEnd !== null) {
 				const branchEndAng = Math.atan((lastBranchEnd[1].y - lastBranchEnd[0].y) / (lastBranchEnd[1].x - lastBranchEnd[0].x)) + Math.PI / 2;
-				branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch || activeStylesheet);
+				branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch ?? {});
 			}
 
 			// save positions and thickness of last branch edge
@@ -328,14 +328,14 @@ class BurtonesqueTree {
 			if (parent.trunk_creator === lastTrunkEnd[1].d && parent.d === 0) {
 				const trunkEndAng = Math.atan((lastTrunkEnd[1].y - lastTrunkEnd[0].y) / (lastTrunkEnd[1].x - lastTrunkEnd[0].x)) + Math.PI / 2;
 				const branchStartAng = Math.atan((child.y - parent.y) / (child.x - parent.x)) + Math.PI / 2;
-				this.renderEdgeGapPolygon(branchesLayer, lastTrunkEnd[1], trunkEndAng, lastTrunkEnd[2], parent, branchStartAng, startT, activeStylesheet.trunk_branch_gap || activeStylesheet);
+				this.renderEdgeGapPolygon(branchesLayer, lastTrunkEnd[1], trunkEndAng, lastTrunkEnd[2], parent, branchStartAng, startT, activeStylesheet.trunk_branch_gap ?? {});
 			}
 		}
 
 		// draws last branch's cap -- it doesn't do it inside the for loop because the end-of-branch check runs 1 loop behind.
 		if (lastBranchEnd !== null) {
 			const branchEndAng = Math.atan((lastBranchEnd[1].y - lastBranchEnd[0].y) / (lastBranchEnd[1].x - lastBranchEnd[0].x)) + Math.PI / 2;
-			branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch || activeStylesheet);
+			branchesLayer.nAgon(lastBranchEnd[1].x, lastBranchEnd[1].y, lastBranchEnd[2], 6, branchEndAng, 0, Math.PI * 2, activeStylesheet.branch ?? {});
 		}
 	}
 
