@@ -52,6 +52,7 @@ body {
 @media only screen and (max-height: 595px) {
 	main {
 		overflow-y: scroll;
+		overflow-x: hidden;
 	}
 }
 
