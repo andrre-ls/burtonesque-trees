@@ -47,7 +47,7 @@ class BurtonesqueTree {
 
 	// set new seed
 	newSeed(_seed) {
-		this.seed = _seed ?? parseInt(Math.random() * 10000000);
+		this.seed = _seed || parseInt(Math.random() * 10000000);
 	}
 
 	// fill genome with default values
@@ -61,14 +61,15 @@ class BurtonesqueTree {
 		this.genome[gene] = value;
 	}
 
-	// TODO:
 	// randomize entire genome
 	randomizeGenome() {
 		for (const gene of Object.keys(genomeStructure)) {
 			const bounds = randomGenomeBoundOverrides[gene] ?? [genomeStructure[gene].min, genomeStructure[gene].max];
 			let randomValue = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
 
-			if (gene === 'spiral_amount') randomValue = Math.random() > 0.5 ? 0 : randomValue;
+			// randomize spiraling on or off
+			// Without this the value would have a tiny chance of being 0, which creates a distinct look that only happens when spiral_amount === 0. 
+			if (gene === 'spiral_amount') randomValue = Math.random() > 0.75 ? 0 : randomValue;
 
 			// make sure the new value matches the predefined decimal count of the gene
 			this.genome[gene] = Number(randomValue.toFixed(countDecimals(genomeStructure[gene].step)));
@@ -189,7 +190,7 @@ class BurtonesqueTree {
 		this.buildTree(newIndex, trunk, branches);
 	}
 
-	// render a polygon between two edges
+	// render a polygon to fill the gap between two edges
 	renderEdgeGapPolygon(layer, end1Pos, angle1, thickness1, start2Pos, angle2, thickness2, styleAttributes = {}) {
 		layer.beginShape(styleAttributes);
 		layer.vertex(end1Pos.x - (thickness1 / 2) * Math.cos(angle1), end1Pos.y - (thickness1 / 2) * Math.sin(angle1));
@@ -339,7 +340,7 @@ class BurtonesqueTree {
 		}
 	}
 
-	// generate new burton tree
+	// generate new tree
 	generate(debug = false) {
 		const trunk = { nodes: [], edges: [] };
 		const branches = { nodes: [], edges: [] };

@@ -28,6 +28,7 @@
 		if (showAbout) treeControlsComponent.collapseLayout();
 	};
 
+	// force close about
 	const closeAbout = () => {
 		showAbout = false;
 		tree.generate(showAbout);

@@ -22,32 +22,36 @@
 		layoutFunction(buttonsContainer);
 	};
 
+	// force collapse layout
 	export const collapseLayout = () => {
 		expandedLayout = false;
 		Layout.collapse(controlsContainer.children[1]);
 	};
 
+	// new seed
 	const handleNewSeed = () => {
 		tree.newSeed();
 		tree.generate(debugStyle);
 	};
 
-	// reset parameters. Function is on the <TreeParameters> components
+	// reset parameters
 	const handleResetParameters = () => {
 		tree.resetGenome();
 		treeParametersComponent.updateUIparams();
 		tree.generate(debugStyle);
 	};
 
-	// randomize genome and update the UI accordingly
+	// randomize genome
 	const handleRandomizeParamters = () => {
 		tree.randomizeGenome();
 		treeParametersComponent.updateUIparams();
 		tree.generate(debugStyle);
 	};
 
+	// export SVG
 	const handleDownloadSvg = () => tree.exportSvg();
 
+	// export PNG
 	let downloadingPng = false;
 	const handleDownloadPng = async () => {
 		downloadingPng = true;
@@ -63,6 +67,7 @@
 		if (window.innerHeight < 600) handleSwitchLayout();
 	});
 
+	// for debugging but I will leave it
 	window.getSeed = () => tree.seed;
 </script>
 

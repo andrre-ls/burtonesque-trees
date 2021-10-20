@@ -23,7 +23,7 @@ class Alayer {
 		this.currentPath = null;
 	}
 
-	// draw rect
+	// draw rect from top-left corner
 	rect(x, y, width, height, styleAttributes = {}) {
 		const ellipseNode = document.createElementNS(SVG_URI, 'rect');
 
@@ -36,7 +36,7 @@ class Alayer {
 		this.layer.append(ellipseNode);
 	}
 
-	// draw and append ellipse (from center)
+	// draw ellipse from center
 	ellipse(x, y, width, height, styleAttributes = {}) {
 		height = height || width;
 		const ellipseNode = document.createElementNS(SVG_URI, 'ellipse');
@@ -50,12 +50,12 @@ class Alayer {
 		this.layer.append(ellipseNode);
 	}
 
-	// draw and append ellipse (from corner)
+	// draw ellipse from top-left corner
 	ellipseCorner(x, y, width, height, styleAttributes = {}) {
 		this.ellipse(x + width / 2, y + height / 2, width, height, styleAttributes);
 	}
 
-	// draw n-agon, where n = number of sides (basically an hexagon of variable sides)
+	// draw n-agon, where n = number of sides (basically an hexagon of variable sides), from center
 	nAgon(x, y, radius, nPoints = 6, rotation = 0, startAng = 0, endAng = Math.PI * 2, styleAttributes = {}) {
 		const angleInc = (Math.PI * 2) / nPoints;
 		this.beginShape(styleAttributes);
