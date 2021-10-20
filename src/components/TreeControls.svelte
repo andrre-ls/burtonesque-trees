@@ -1,4 +1,5 @@
 <script>
+	import { onMount } from 'svelte';
 	import TreeParameters from './TreeParameters.svelte';
 	import * as Layout from '../ui-utils/uiLayout.js';
 
@@ -57,8 +58,12 @@
 		// I'm doing this to avoid multiple clicks before the promise is resolved.
 	};
 
-	window.getSeed = () => tree.seed;
+	onMount(() => {
+		// switch to expanded layout on small windows
+		if (window.innerHeight < 600) handleSwitchLayout();
+	});
 
+	window.getSeed = () => tree.seed;
 </script>
 
 <div bind:this={controlsContainer} id="controls-container">

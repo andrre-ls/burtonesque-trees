@@ -52,6 +52,12 @@ body {
 	background-color: var(--clr-background);
 }
 
+@media only screen and (max-height: 595px) {
+	main {
+		overflow-y: scroll;
+	}
+}
+
 main {
 	max-width: 1920px;
 }

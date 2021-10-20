@@ -71,6 +71,7 @@ export const randomGenomeBoundOverrides = {
 	base_thickness: [20, 75],
 	top_thickness: [15, 40],
 	trunk_roughness: [1, 8],
+	depth_branch_bias: [0, 0.75],
 	max_branch_depth: [4, 10],
 	branch_prob: [0.2, 0.75],
 	stop_branch_prob: [0, 0.2],
@@ -79,6 +80,6 @@ export const randomGenomeBoundOverrides = {
 	branch_short_factor: [0.01, 0.5],
 	spiral_amount: [0.25, 0.5],
 	branch_start_thickness: [10, 20],
-	branch_end_thickness: [3, 6],
+	branch_end_thickness: [2, 6],
 	branch_roughness: [1, 8]
 };

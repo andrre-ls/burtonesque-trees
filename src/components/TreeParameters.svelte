@@ -33,8 +33,6 @@
 		if (!(gene in parameterState)) return;
 		tree.updateGene(gene, parameterState[gene]);
 		tree.generate(debugStyle);
-
-		console.log(gene, parameterState[gene]);
 	};
 
 	// map from range1 to range2 -- to convert all parameters to 0-100%
@@ -60,7 +58,7 @@
 <style>
 	#tree-parameters {
 		position: relative;
-		height: 200px;
+		height: 100px;
 		flex: auto;
 		overflow-y: scroll;
 		border: var(--stroke-size) solid var(--clr-main);
@@ -103,6 +101,7 @@
 		bottom: 0;
 		height: 2rem;
 		background: linear-gradient(0deg, var(--clr-background) 0%, rgba(var(--lum-background), var(--lum-background), var(--lum-background), 0) 100%);
+		pointer-events: none;
 	}
 
 	.scroll-gradient:nth-child(1) {
