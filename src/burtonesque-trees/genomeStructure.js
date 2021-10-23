@@ -65,9 +65,10 @@ export const genomeStructure = {
 };
 
 export const randomGenomeBoundOverrides = {
-	trunk_size: [6, 18],
+	trunk_size: [8, 18],
 	trunk_range_x: [30, 60],
 	trunk_range_y: [30, 60],
+	inc_straightness: [1, 15],
 	base_thickness: [20, 75],
 	top_thickness: [15, 40],
 	trunk_roughness: [1, 8],
@@ -78,8 +79,8 @@ export const randomGenomeBoundOverrides = {
 	fork_prob: [0, 0.3],
 	branch_range: [40, 100],
 	branch_short_factor: [0.01, 0.5],
-	spiral_amount: [0.25, 0.5],
+	spiral_amount: [0.3, 0.7],
 	branch_start_thickness: [10, 20],
 	branch_end_thickness: [2, 6],
-	branch_roughness: [1, 8]
+	branch_roughness: [1, 8],
 };

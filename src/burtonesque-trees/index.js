@@ -47,8 +47,7 @@ class BurtonesqueTree {
 
 	// set new seed
 	newSeed(_seed) {
-		// this.seed = _seed || parseInt(Math.random() * 10000000);
-		this.seed = INIT_SEEDS[parseInt(Math.random() * INIT_SEEDS.length)];
+		this.seed = _seed || parseInt(Math.random() * 10000000);
 	}
 
 	// fill genome with default values

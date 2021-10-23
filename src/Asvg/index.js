@@ -12,6 +12,7 @@ const setMultipleAttributes = (node, attributes) => {
 	}
 };
 
+
 // layer object where shapes are drawn
 class Alayer {
 	constructor(_id) {
