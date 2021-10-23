@@ -83,8 +83,8 @@
 		<section>
 			<h3 class="section-title">Parameter Controls</h3>
 			<button class="def-bttn" on:click={handleNewSeed}>New Seed</button>
-			<button class="def-bttn" on:click={handleResetParameters}>Reset Parameters</button>
 			<button class="def-bttn" on:click={handleRandomizeParamters}>Randomize Parameters</button>
+			<button class="def-bttn" on:click={handleResetParameters}>Reset Parameters</button>
 		</section>
 		<section>
 			<h3 class="section-title">Export</h3>

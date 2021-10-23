@@ -47,7 +47,8 @@ class BurtonesqueTree {
 
 	// set new seed
 	newSeed(_seed) {
-		this.seed = _seed || parseInt(Math.random() * 10000000);
+		// this.seed = _seed || parseInt(Math.random() * 10000000);
+		this.seed = INIT_SEEDS[parseInt(Math.random() * INIT_SEEDS.length)];
 	}
 
 	// fill genome with default values
@@ -68,7 +69,7 @@ class BurtonesqueTree {
 			let randomValue = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
 
 			// randomize spiraling on or off
-			// Without this the value would have a tiny chance of being 0, which creates a distinct look that only happens when spiral_amount === 0. 
+			// Without this the value would have a tiny chance of being 0, which creates a distinct look that only happens when spiral_amount === 0.
 			if (gene === 'spiral_amount') randomValue = Math.random() > 0.75 ? 0 : randomValue;
 
 			// make sure the new value matches the predefined decimal count of the gene
