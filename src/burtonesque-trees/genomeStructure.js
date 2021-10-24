@@ -52,7 +52,7 @@ export const genomeStructure = {
 	branch_short_factor: { default: 0.3, max: 0.95, min: 0, step: 0.05 },
 	// *
 	// how much each branch will lean toward spiraling
-	spiral_amount: { default: 0.4, max: 1, min: 0, step: 0.05 },
+	spiral_amount: { default: 0.4, max: 1, min: 0, step: 0.005 },
 	// *
 	// branch thickness at body
 	branch_start_thickness: { default: 15, max: 30, min: 5, step: 1 },
