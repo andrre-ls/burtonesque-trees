@@ -12,6 +12,11 @@ https://andrre-ls.github.io/burtonesque-trees/
 <br/>
 <br/>
 
+#### Behance post about the project:
+https://www.behance.net/gallery/129682831/Burtonesque-Trees
+<br/>
+<br/>
+
 
 #### Credits
 The tree generator script relies on the *random()* and *noise()* methods of [p5.js](https://github.com/processing/p5.js), and the user interface was built with [Svelte](https://github.com/sveltejs/svelte).
